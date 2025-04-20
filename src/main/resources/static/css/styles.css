@@ -603,3 +603,8 @@ body {
 .notification.info {
   background-color: #17a2b8;
 }
+
+.notification.warning {
+  background-color: #ffc107;
+  color: #212529;
+}

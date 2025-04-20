@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
             gridViewBtn.classList.remove('active');
             // Store preference in localStorage
             localStorage.setItem('taskView', 'list');
+            // Update display for all visible tasks
+            updateTaskDisplay();
         });
         
         gridViewBtn.addEventListener('click', function() {
@@ -21,6 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
             listViewBtn.classList.remove('active');
             // Store preference in localStorage
             localStorage.setItem('taskView', 'grid');
+            // Update display for all visible tasks
+            updateTaskDisplay();
         });
         
         // Check for saved preference
@@ -31,6 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
             listViewBtn.classList.remove('active');
         }
     }
+    
+    // Add data attributes to tasks for filtering
+    initializeTaskDataAttributes();
     
     // Task Filtering
     const filterBtn = document.querySelector('.card-actions .btn-outline');
@@ -56,37 +63,28 @@ document.addEventListener('DOMContentLoaded', function() {
             filterSelects.forEach(select => {
                 select.value = 'all';
             });
+            
+            // Show all tasks
+            const tasks = document.querySelectorAll('.task-item');
+            tasks.forEach(task => {
+                task.style.display = taskList.classList.contains('grid-view') ? 'block' : 'flex';
+            });
+            
+            // Show filter cleared message
+            showFilterNotification('All filters have been cleared!', 'info');
         });
     }
     
     if (applyFiltersBtn) {
         applyFiltersBtn.addEventListener('click', function() {
-            // Get filter values
-            const statusFilter = document.getElementById('status-filter').value;
-            const priorityFilter = document.getElementById('priority-filter').value;
-            const projectFilter = document.getElementById('project-filter').value;
-            const assigneeFilter = document.getElementById('assignee-filter').value;
-            
-            // Apply filters to tasks
-            const tasks = document.querySelectorAll('.task-item');
-            tasks.forEach(task => {
-                // In a real app, you would check the task's data attributes
-                // For demo, just randomly show/hide tasks
-                const randomVisibility = Math.random() > 0.3;
-                task.style.display = randomVisibility ? 'flex' : 'none';
-                
-                // If in grid view, we need to use 'block' instead of 'flex'
-                if (taskList.classList.contains('grid-view') && randomVisibility) {
-                    task.style.display = 'block';
-                }
-            });
+            applyFilters();
             
             // Hide filters panel
             taskFilters.classList.remove('active');
             filterBtn.textContent = 'Filter';
             
             // Show filter applied message
-            showFilterNotification();
+            showFilterNotification('Filters applied successfully!', 'success');
         });
     }
     
@@ -94,39 +92,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const sortSelect = document.getElementById('sort-tasks');
     if (sortSelect) {
         sortSelect.addEventListener('change', function() {
-            const sortValue = this.value;
-            const tasks = Array.from(document.querySelectorAll('.task-item'));
-            
-            // Sort tasks based on selected option
-            tasks.sort((a, b) => {
-                if (sortValue === 'name-asc') {
-                    const titleA = a.querySelector('.task-title').textContent.toLowerCase();
-                    const titleB = b.querySelector('.task-title').textContent.toLowerCase();
-                    return titleA.localeCompare(titleB);
-                } else if (sortValue === 'name-desc') {
-                    const titleA = a.querySelector('.task-title').textContent.toLowerCase();
-                    const titleB = b.querySelector('.task-title').textContent.toLowerCase();
-                    return titleB.localeCompare(titleA);
-                } else if (sortValue === 'priority-desc') {
-                    const priorityA = getPriorityValue(a.querySelector('.task-priority'));
-                    const priorityB = getPriorityValue(b.querySelector('.task-priority'));
-                    return priorityB - priorityA;
-                } else if (sortValue === 'priority-asc') {
-                    const priorityA = getPriorityValue(a.querySelector('.task-priority'));
-                    const priorityB = getPriorityValue(b.querySelector('.task-priority'));
-                    return priorityA - priorityB;
-                } else if (sortValue === 'due-date-asc' || sortValue === 'due-date-desc') {
-                    // For demo, just keep order or reverse
-                    return sortValue === 'due-date-desc' ? -1 : 1;
-                }
-                return 0;
-            });
-            
-            // Re-append sorted tasks
-            const taskListEl = document.getElementById('task-list');
-            tasks.forEach(task => {
-                taskListEl.appendChild(task);
-            });
+            sortTasks(this.value);
+            showFilterNotification('Tasks sorted successfully!', 'info');
         });
     }
     
@@ -137,11 +104,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const taskItem = this.closest('.task-item');
             if (this.checked) {
                 taskItem.classList.add('completed');
+                taskItem.setAttribute('data-status', 'completed');
                 // In a real app, you would send an API request to update the task status
                 console.log('Task marked as completed:', taskItem.querySelector('.task-title').textContent);
+                showFilterNotification(`Task "${taskItem.querySelector('.task-title').textContent}" marked as completed!`, 'success');
             } else {
                 taskItem.classList.remove('completed');
+                taskItem.setAttribute('data-status', taskItem.getAttribute('data-original-status') || 'open');
                 console.log('Task marked as incomplete:', taskItem.querySelector('.task-title').textContent);
+                showFilterNotification(`Task "${taskItem.querySelector('.task-title').textContent}" marked as in progress!`, 'info');
             }
         });
     });
@@ -152,24 +123,203 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             const taskItem = this.closest('.task-item');
             const taskTitle = taskItem.querySelector('.task-title').textContent;
-            alert(`Editing task: ${taskTitle}`);
+            
+            // If the button is a link (has href), don't show alert
+            if (!this.getAttribute('href')) {
+                alert(`Editing task: ${taskTitle}`);
+            }
             // In a real app, you would open a modal or navigate to the edit page
         });
     });
 });
 
-// Helper Functions
-function getPriorityValue(priorityEl) {
-    if (!priorityEl) return 1;
-    if (priorityEl.classList.contains('priority-high')) return 3;
-    if (priorityEl.classList.contains('priority-medium')) return 2;
-    return 1;
+// Initialize data attributes on task items for filtering
+function initializeTaskDataAttributes() {
+    const tasks = document.querySelectorAll('.task-item');
+    
+    tasks.forEach(task => {
+        // Set Priority
+        const priorityEl = task.querySelector('.task-priority');
+        if (priorityEl) {
+            if (priorityEl.classList.contains('priority-high')) {
+                task.setAttribute('data-priority', 'high');
+            } else if (priorityEl.classList.contains('priority-medium')) {
+                task.setAttribute('data-priority', 'medium');
+            } else if (priorityEl.classList.contains('priority-low')) {
+                task.setAttribute('data-priority', 'low');
+            }
+        }
+        
+        // Set Status (based on completion or explicitly set)
+        if (task.classList.contains('completed')) {
+            task.setAttribute('data-status', 'completed');
+        } else {
+            // Check for status in the task content or default to 'open'
+            const statusText = task.textContent.toLowerCase();
+            if (statusText.includes('in progress')) {
+                task.setAttribute('data-status', 'in-progress');
+            } else if (statusText.includes('in review')) {
+                task.setAttribute('data-status', 'review');
+            } else {
+                task.setAttribute('data-status', 'open');
+            }
+        }
+        
+        // Store original status for toggling completion
+        task.setAttribute('data-original-status', task.getAttribute('data-status'));
+        
+        // Set Project
+        const projectEl = task.querySelector('.task-project');
+        if (projectEl) {
+            const project = projectEl.textContent.trim();
+            if (project.includes('Backend')) {
+                task.setAttribute('data-project', '1');
+            } else if (project.includes('Frontend')) {
+                task.setAttribute('data-project', '2');
+            } else {
+                task.setAttribute('data-project', '3'); // Documentation or other
+            }
+        } else {
+            // Try to infer from context
+            const taskContent = task.textContent.toLowerCase();
+            if (taskContent.includes('api') || taskContent.includes('database') || taskContent.includes('server')) {
+                task.setAttribute('data-project', '1'); // Backend
+            } else if (taskContent.includes('ui') || taskContent.includes('interface') || taskContent.includes('design')) {
+                task.setAttribute('data-project', '2'); // Frontend
+            } else {
+                task.setAttribute('data-project', 'all');
+            }
+        }
+        
+        // Set assignee (this would come from the backend in a real app)
+        // For demo, assign randomly
+        const assignees = ['1', '2', '3'];
+        task.setAttribute('data-assignee', assignees[Math.floor(Math.random() * assignees.length)]);
+    });
 }
 
-function showFilterNotification() {
+// Apply filters to task list
+function applyFilters() {
+    const statusFilter = document.getElementById('status-filter').value;
+    const priorityFilter = document.getElementById('priority-filter').value;
+    const projectFilter = document.getElementById('project-filter').value;
+    const assigneeFilter = document.getElementById('assignee-filter') ? 
+                          document.getElementById('assignee-filter').value : 'all';
+    
+    const tasks = document.querySelectorAll('.task-item');
+    let visibleCount = 0;
+    
+    tasks.forEach(task => {
+        const statusMatch = statusFilter === 'all' || task.getAttribute('data-status') === statusFilter;
+        const priorityMatch = priorityFilter === 'all' || task.getAttribute('data-priority') === priorityFilter;
+        const projectMatch = projectFilter === 'all' || task.getAttribute('data-project') === projectFilter;
+        const assigneeMatch = assigneeFilter === 'all' || task.getAttribute('data-assignee') === assigneeFilter;
+        
+        // Make task visible only if it matches all selected filters
+        const isVisible = statusMatch && priorityMatch && projectMatch && assigneeMatch;
+        
+        if (isVisible) {
+            const taskList = document.getElementById('task-list');
+            task.style.display = taskList && taskList.classList.contains('grid-view') ? 'block' : 'flex';
+            visibleCount++;
+        } else {
+            task.style.display = 'none';
+        }
+    });
+    
+    // If no tasks match filters, show a message
+    if (visibleCount === 0) {
+        showFilterNotification('No tasks match the selected filters.', 'warning');
+    }
+    
+    return visibleCount;
+}
+
+// Update task display based on current view mode
+function updateTaskDisplay() {
+    const taskList = document.getElementById('task-list');
+    const isGridView = taskList && taskList.classList.contains('grid-view');
+    
+    const visibleTasks = document.querySelectorAll('.task-item[style*="display: flex"], .task-item[style*="display: block"]');
+    visibleTasks.forEach(task => {
+        task.style.display = isGridView ? 'block' : 'flex';
+    });
+}
+
+// Sort tasks by different criteria
+function sortTasks(sortValue) {
+    const tasks = Array.from(document.querySelectorAll('.task-item'));
+    
+    // Sort tasks based on selected option
+    tasks.sort((a, b) => {
+        if (sortValue === 'name-asc') {
+            const titleA = a.querySelector('.task-title').textContent.toLowerCase();
+            const titleB = b.querySelector('.task-title').textContent.toLowerCase();
+            return titleA.localeCompare(titleB);
+        } else if (sortValue === 'name-desc') {
+            const titleA = a.querySelector('.task-title').textContent.toLowerCase();
+            const titleB = b.querySelector('.task-title').textContent.toLowerCase();
+            return titleB.localeCompare(titleA);
+        } else if (sortValue === 'priority-desc') {
+            const priorityA = getPriorityValue(a.getAttribute('data-priority'));
+            const priorityB = getPriorityValue(b.getAttribute('data-priority'));
+            return priorityB - priorityA;
+        } else if (sortValue === 'priority-asc') {
+            const priorityA = getPriorityValue(a.getAttribute('data-priority'));
+            const priorityB = getPriorityValue(b.getAttribute('data-priority'));
+            return priorityA - priorityB;
+        } else if (sortValue === 'due-date-asc' || sortValue === 'due-date-desc') {
+            // Extract dates from the task due dates
+            const dateA = parseDueDate(a.querySelector('.task-due'));
+            const dateB = parseDueDate(b.querySelector('.task-due'));
+            
+            if (dateA && dateB) {
+                return sortValue === 'due-date-desc' ? dateB - dateA : dateA - dateB;
+            }
+            return 0;
+        }
+        return 0;
+    });
+    
+    // Re-append sorted tasks
+    const taskListEl = document.getElementById('task-list');
+    tasks.forEach(task => {
+        taskListEl.appendChild(task);
+    });
+}
+
+// Helper Functions
+function getPriorityValue(priority) {
+    if (priority === 'high') return 3;
+    if (priority === 'medium') return 2;
+    return 1; // low priority
+}
+
+function parseDueDate(dueDateEl) {
+    if (!dueDateEl) return null;
+    
+    const dateText = dueDateEl.textContent;
+    const match = dateText.match(/Due: (\w+ \d+, \d+)|Due: (\w+ \d+)/);
+    
+    if (match) {
+        const dateStr = match[1] || match[2];
+        return new Date(dateStr + ', 2025');
+    }
+    
+    return null;
+}
+
+function showFilterNotification(message, type = 'info') {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => {
+        document.body.removeChild(notification);
+    });
+    
+    // Create new notification
     const notification = document.createElement('div');
-    notification.className = 'notification success';
-    notification.textContent = 'Filters applied successfully!';
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
     document.body.appendChild(notification);
     
     // Animate in
@@ -181,7 +331,11 @@ function showFilterNotification() {
     setTimeout(() => {
         notification.classList.remove('visible');
         setTimeout(() => {
-            document.body.removeChild(notification);
+            try {
+                document.body.removeChild(notification);
+            } catch (e) {
+                // Notification might have been removed already
+            }
         }, 300);
     }, 3000);
 }
