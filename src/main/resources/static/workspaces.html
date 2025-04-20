@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Workspaces - Gaia Space</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gaia Space - Workspaces">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="/images/logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .workspace-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .workspace-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .workspace-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .workspace-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 1rem;
+        }
+        
+        .workspace-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .workspace-members {
+            display: flex;
+            margin-top: 1rem;
+        }
+        
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: -8px;
+            border: 2px solid white;
+        }
+        
+        .workspace-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .workspace-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .workspace-stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+        }
+        
+        .workspace-description {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .workspace-actions {
+            margin-top: auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .workspace-color-1 { background-color: rgba(74, 111, 220, 0.1); color: var(--primary-color); }
+        .workspace-color-2 { background-color: rgba(40, 167, 69, 0.1); color: #28a745; }
+        .workspace-color-3 { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+        .workspace-color-4 { background-color: rgba(255, 193, 7, 0.1); color: #ffc107; }
+        .workspace-color-5 { background-color: rgba(23, 162, 184, 0.1); color: #17a2b8; }
+        
+        .create-workspace-card {
+            background-color: transparent;
+            border: 2px dashed var(--light-gray);
+            border-radius: 8px;
+            height: 100%;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        
+        .create-workspace-card:hover {
+            background-color: rgba(74, 111, 220, 0.05);
+            border-color: var(--primary-color);
+        }
+        
+        .create-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background-color: rgba(74, 111, 220, 0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 1rem;
+        }
+        
+        .create-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .create-text {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 200px;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <img src="/images/logo.svg" alt="Gaia Space Logo"> Gaia Space
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/workspaces" class="active">Workspaces</a></li>
+                    <li><a href="/projects">Projects</a></li>
+                    <li><a href="/tasks">Tasks</a></li>
+                </ul>
+                <div class="user-menu">
+                    <a href="/api/users/login" class="btn btn-primary">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h2 class="page-title">Workspaces</h2>
+                <p class="page-subtitle">Manage your collaborative spaces and teams</p>
+            </div>
+            
+            <!-- Workspaces Grid -->
+            <div class="workspace-grid">
+                <!-- Engineering Workspace -->
+                <div class="workspace-card">
+                    <div class="workspace-header">
+                        <div class="workspace-icon workspace-color-1">🚀</div>
+                        <h3 class="workspace-title">Engineering Team</h3>
+                        <div class="workspace-members">
+                            <div class="member-avatar">AJ</div>
+                            <div class="member-avatar">MG</div>
+                            <div class="member-avatar">DK</div>
+                            <div class="member-avatar">+2</div>
+                        </div>
+                    </div>
+                    <div class="workspace-content">
+                        <div class="workspace-stats">
+                            <div class="workspace-stat">
+                                <div class="stat-value">8</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">24</div>
+                                <div class="stat-label">Tasks</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Members</div>
+                            </div>
+                        </div>
+                        <p class="workspace-description">Backend and infrastructure development team workspace focused on system architecture and implementation.</p>
+                        <div class="workspace-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/workspaces/1" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Design Workspace -->
+                <div class="workspace-card">
+                    <div class="workspace-header">
+                        <div class="workspace-icon workspace-color-2">🎨</div>
+                        <h3 class="workspace-title">Design Team</h3>
+                        <div class="workspace-members">
+                            <div class="member-avatar">MG</div>
+                            <div class="member-avatar">EW</div>
+                            <div class="member-avatar">+1</div>
+                        </div>
+                    </div>
+                    <div class="workspace-content">
+                        <div class="workspace-stats">
+                            <div class="workspace-stat">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">18</div>
+                                <div class="stat-label">Tasks</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">Members</div>
+                            </div>
+                        </div>
+                        <p class="workspace-description">UI/UX design team responsible for creating and maintaining the visual language and user experience.</p>
+                        <div class="workspace-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/workspaces/2" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product Workspace -->
+                <div class="workspace-card">
+                    <div class="workspace-header">
+                        <div class="workspace-icon workspace-color-3">📊</div>
+                        <h3 class="workspace-title">Product Team</h3>
+                        <div class="workspace-members">
+                            <div class="member-avatar">SL</div>
+                            <div class="member-avatar">JM</div>
+                            <div class="member-avatar">+2</div>
+                        </div>
+                    </div>
+                    <div class="workspace-content">
+                        <div class="workspace-stats">
+                            <div class="workspace-stat">
+                                <div class="stat-value">4</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">14</div>
+                                <div class="stat-label">Tasks</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">4</div>
+                                <div class="stat-label">Members</div>
+                            </div>
+                        </div>
+                        <p class="workspace-description">Product management and strategy team focusing on roadmap planning and feature prioritization.</p>
+                        <div class="workspace-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/workspaces/3" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Marketing Workspace -->
+                <div class="workspace-card">
+                    <div class="workspace-header">
+                        <div class="workspace-icon workspace-color-4">📣</div>
+                        <h3 class="workspace-title">Marketing Team</h3>
+                        <div class="workspace-members">
+                            <div class="member-avatar">TR</div>
+                            <div class="member-avatar">AK</div>
+                        </div>
+                    </div>
+                    <div class="workspace-content">
+                        <div class="workspace-stats">
+                            <div class="workspace-stat">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">9</div>
+                                <div class="stat-label">Tasks</div>
+                            </div>
+                            <div class="workspace-stat">
+                                <div class="stat-value">2</div>
+                                <div class="stat-label">Members</div>
+                            </div>
+                        </div>
+                        <p class="workspace-description">Marketing and communications team responsible for product promotion and customer engagement.</p>
+                        <div class="workspace-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/workspaces/4" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Create New Workspace Card -->
+                <div class="create-workspace-card">
+                    <div class="create-icon">+</div>
+                    <div class="create-title">Create Workspace</div>
+                    <p class="create-text">Add a new team or project workspace</p>
+                </div>
+            </div>
+            
+            <!-- Recently Visited -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recently Visited</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="task-list">
+                        <li class="task-item">
+                            <div class="workspace-icon workspace-color-1" style="margin-right: 1rem; width: 36px; height: 36px; font-size: 18px;">🚀</div>
+                            <div class="task-content">
+                                <h4 class="task-title">Engineering Team</h4>
+                                <p class="task-description">Visited 2 hours ago</p>
+                            </div>
+                            <div class="task-actions">
+                                <a href="/workspaces/1" class="btn btn-outline btn-sm">Open</a>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <div class="workspace-icon workspace-color-2" style="margin-right: 1rem; width: 36px; height: 36px; font-size: 18px;">🎨</div>
+                            <div class="task-content">
+                                <h4 class="task-title">Design Team</h4>
+                                <p class="task-description">Visited 1 day ago</p>
+                            </div>
+                            <div class="task-actions">
+                                <a href="/workspaces/2" class="btn btn-outline btn-sm">Open</a>
+                            </div>
+                        </li>
+                        <li class="task-item">
+                            <div class="workspace-icon workspace-color-5" style="margin-right: 1rem; width: 36px; height: 36px; font-size: 18px;">📑</div>
+                            <div class="task-content">
+                                <h4 class="task-title">Documentation</h4>
+                                <p class="task-description">Visited 3 days ago</p>
+                            </div>
+                            <div class="task-actions">
+                                <a href="/workspaces/5" class="btn btn-outline btn-sm">Open</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="copyright">© 2025 Gaia Space. All rights reserved.</p>
+                <ul class="footer-links">
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/help">Help</a></li>
+                    <li><a href="/privacy">Privacy</a></li>
+                    <li><a href="/terms">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle create workspace card click
+            const createWorkspaceCard = document.querySelector('.create-workspace-card');
+            if (createWorkspaceCard) {
+                createWorkspaceCard.addEventListener('click', function() {
+                    alert('Creating a new workspace!');
+                    // In a real app, redirect to the workspace creation form
+                });
+            }
+            
+            // Workspace card hover effects
+            const workspaceCards = document.querySelectorAll('.workspace-card');
+            workspaceCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                    this.style.boxShadow = '0 10px 15px rgba(0, 0, 0, 0.1)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

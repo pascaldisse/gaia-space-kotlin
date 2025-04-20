@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Projects - Gaia Space</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gaia Space - Projects">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="/images/logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .project-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .project-title-section {
+            display: flex;
+            align-items: center;
+        }
+        
+        .project-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 1rem;
+        }
+        
+        .project-info {
+            flex: 1;
+        }
+        
+        .project-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+        }
+        
+        .project-subtitle {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            margin: 0;
+        }
+        
+        .project-subtitle .separator {
+            margin: 0 0.5rem;
+            color: var(--light-gray);
+        }
+        
+        .project-workspace {
+            background-color: rgba(74, 111, 220, 0.1);
+            color: var(--primary-color);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        
+        .project-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+        
+        .status-active {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+        
+        .status-planning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+        
+        .status-completed {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+        
+        .project-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1.25rem 0;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+        
+        .meta-icon {
+            margin-right: 0.5rem;
+            opacity: 0.7;
+        }
+        
+        .project-description {
+            color: var(--text-color);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+        }
+        
+        .project-progress {
+            margin-bottom: 1rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-title {
+            font-size: 0.85rem;
+            color: var(--dark-gray);
+            margin: 0;
+        }
+        
+        .progress-percent {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background-color: var(--light-gray);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-value {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        .project-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--light-gray);
+        }
+        
+        .project-members {
+            display: flex;
+        }
+        
+        .project-member {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: -8px;
+            border: 2px solid white;
+        }
+        
+        .project-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .project-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .workspace-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .workspace-tag {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            transition: background-color 0.2s, color 0.2s;
+        }
+        
+        .workspace-tag.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .workspace-tag:hover:not(.active) {
+            background-color: #e2e6ea;
+        }
+        
+        .create-project-button {
+            display: flex;
+            align-items: center;
+            background-color: rgba(74, 111, 220, 0.1);
+            color: var(--primary-color);
+            border: 1px dashed var(--primary-color);
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .create-project-button:hover {
+            background-color: rgba(74, 111, 220, 0.15);
+        }
+        
+        .create-project-icon {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <img src="/images/logo.svg" alt="Gaia Space Logo"> Gaia Space
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/workspaces">Workspaces</a></li>
+                    <li><a href="/projects" class="active">Projects</a></li>
+                    <li><a href="/tasks">Tasks</a></li>
+                </ul>
+                <div class="user-menu">
+                    <a href="/api/users/login" class="btn btn-primary">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h2 class="page-title">Projects</h2>
+                <p class="page-subtitle">Manage and track your team's projects</p>
+            </div>
+            
+            <!-- Project Filters -->
+            <div class="project-filters">
+                <div class="filter-group" style="flex: 1;">
+                    <label for="search-projects">Search Projects:</label>
+                    <input type="text" id="search-projects" class="form-control" placeholder="Search by name or description...">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter" class="form-control">
+                        <option value="all">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="planning">Planning</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Workspaces:</label>
+                    <div class="workspace-filter">
+                        <span class="workspace-tag active">All</span>
+                        <span class="workspace-tag">Engineering</span>
+                        <span class="workspace-tag">Design</span>
+                        <span class="workspace-tag">Product</span>
+                        <span class="workspace-tag">Marketing</span>
+                    </div>
+                </div>
+                
+                <div class="filter-group" style="align-self: flex-end;">
+                    <a href="/projects/new" class="create-project-button">
+                        <span class="create-project-icon">+</span>
+                        <span>Create Project</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Projects List -->
+            <div class="projects-list">
+                <!-- Backend Project -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="project-title-section">
+                            <div class="project-icon workspace-color-1">🚀</div>
+                            <div class="project-info">
+                                <h3 class="project-title">Gaia Space Backend</h3>
+                                <p class="project-subtitle">
+                                    <span class="project-workspace">Engineering</span>
+                                    <span class="separator">•</span>
+                                    <span>Created Apr 10, 2025</span>
+                                    <span class="project-status status-active">Active</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/projects/1" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                    
+                    <p class="project-description">
+                        Spring Boot backend services with JPA repositories, RESTful APIs, and GraphQL support. Handles authentication, data persistence, and business logic for Gaia Space platform.
+                    </p>
+                    
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">📊</span>
+                            <span>8 Tasks</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📝</span>
+                            <span>3 Documents</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📦</span>
+                            <span>4 Repositories</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-progress">
+                        <div class="progress-header">
+                            <p class="progress-title">Overall Progress</p>
+                            <span class="progress-percent">75%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-footer">
+                        <div class="project-members">
+                            <div class="project-member">AJ</div>
+                            <div class="project-member">MG</div>
+                            <div class="project-member">DK</div>
+                        </div>
+                        <span class="meta-item">Updated 2 hours ago</span>
+                    </div>
+                </div>
+                
+                <!-- Frontend Project -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="project-title-section">
+                            <div class="project-icon workspace-color-2">🎨</div>
+                            <div class="project-info">
+                                <h3 class="project-title">Gaia Space Frontend</h3>
+                                <p class="project-subtitle">
+                                    <span class="project-workspace">Design</span>
+                                    <span class="separator">•</span>
+                                    <span>Created Apr 12, 2025</span>
+                                    <span class="project-status status-active">Active</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/projects/2" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                    
+                    <p class="project-description">
+                        React-based web interface for Gaia Space platform. Includes component library, state management, and integrations with backend APIs.
+                    </p>
+                    
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">📊</span>
+                            <span>12 Tasks</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📝</span>
+                            <span>5 Documents</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📦</span>
+                            <span>2 Repositories</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-progress">
+                        <div class="progress-header">
+                            <p class="progress-title">Overall Progress</p>
+                            <span class="progress-percent">60%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: 60%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-footer">
+                        <div class="project-members">
+                            <div class="project-member">EW</div>
+                            <div class="project-member">MG</div>
+                        </div>
+                        <span class="meta-item">Updated 1 day ago</span>
+                    </div>
+                </div>
+                
+                <!-- Mobile App Project -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="project-title-section">
+                            <div class="project-icon workspace-color-3">📱</div>
+                            <div class="project-info">
+                                <h3 class="project-title">Gaia Space Mobile App</h3>
+                                <p class="project-subtitle">
+                                    <span class="project-workspace">Product</span>
+                                    <span class="separator">•</span>
+                                    <span>Created Apr 15, 2025</span>
+                                    <span class="project-status status-planning">Planning</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/projects/3" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                    
+                    <p class="project-description">
+                        React Native mobile application for iOS and Android. Provides task management, notifications, and collaboration features on mobile devices.
+                    </p>
+                    
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">📊</span>
+                            <span>6 Tasks</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📝</span>
+                            <span>2 Documents</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📦</span>
+                            <span>1 Repository</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-progress">
+                        <div class="progress-header">
+                            <p class="progress-title">Overall Progress</p>
+                            <span class="progress-percent">20%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-footer">
+                        <div class="project-members">
+                            <div class="project-member">SL</div>
+                            <div class="project-member">JM</div>
+                            <div class="project-member">DK</div>
+                        </div>
+                        <span class="meta-item">Updated 3 days ago</span>
+                    </div>
+                </div>
+                
+                <!-- Documentation Project -->
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="project-title-section">
+                            <div class="project-icon workspace-color-5">📑</div>
+                            <div class="project-info">
+                                <h3 class="project-title">Platform Documentation</h3>
+                                <p class="project-subtitle">
+                                    <span class="project-workspace">Engineering</span>
+                                    <span class="separator">•</span>
+                                    <span>Created Apr 5, 2025</span>
+                                    <span class="project-status status-completed">Completed</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/projects/4" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                    
+                    <p class="project-description">
+                        Comprehensive documentation for Gaia Space platform, including API references, architecture diagrams, and user guides.
+                    </p>
+                    
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">📊</span>
+                            <span>4 Tasks</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📝</span>
+                            <span>8 Documents</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📦</span>
+                            <span>1 Repository</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-progress">
+                        <div class="progress-header">
+                            <p class="progress-title">Overall Progress</p>
+                            <span class="progress-percent">100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="project-footer">
+                        <div class="project-members">
+                            <div class="project-member">AJ</div>
+                            <div class="project-member">MG</div>
+                        </div>
+                        <span class="meta-item">Updated 1 week ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="copyright">© 2025 Gaia Space. All rights reserved.</p>
+                <ul class="footer-links">
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/help">Help</a></li>
+                    <li><a href="/privacy">Privacy</a></li>
+                    <li><a href="/terms">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Workspace filter functionality
+            const workspaceTags = document.querySelectorAll('.workspace-tag');
+            workspaceTags.forEach(tag => {
+                tag.addEventListener('click', function() {
+                    workspaceTags.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // In a real app, filter projects based on selected workspace
+                    const selectedWorkspace = this.textContent;
+                    console.log('Filtering by workspace:', selectedWorkspace);
+                });
+            });
+            
+            // Status filter functionality
+            const statusFilter = document.getElementById('status-filter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', function() {
+                    const selectedStatus = this.value;
+                    console.log('Filtering by status:', selectedStatus);
+                    
+                    // In a real app, filter projects based on selected status
+                });
+            }
+            
+            // Search functionality
+            const searchInput = document.getElementById('search-projects');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    console.log('Searching for:', searchTerm);
+                    
+                    // In a real app, filter projects based on search term
+                });
+            }
+        });
+    </script>
+</body>
+</html>
