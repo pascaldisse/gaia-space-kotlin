@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Gaia Space - Your Workspace Platform</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gaia Space - A collaborative workspace platform">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="/images/logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <img src="/images/logo.svg" alt="Gaia Space Logo"> Gaia Space
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/workspaces">Workspaces</a></li>
+                    <li><a href="/projects">Projects</a></li>
+                    <li><a href="/tasks">Tasks</a></li>
+                    <li><a href="/pipelines">Pipelines</a></li>
+                </ul>
+                <div class="user-menu">
+                    <a href="/api/users/login" class="btn btn-primary">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="dashboard-grid">
+                <!-- Tasks Section -->
+                <div class="tasks-section">
+                    <h2 class="page-title">My Tasks</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Active Tasks</h3>
+                            <a href="/tasks/new" class="btn btn-primary btn-sm">Add Task</a>
+                        </div>
+                        <div class="card-body">
+                            <ul class="task-list">
+                                <li class="task-item">
+                                    <div class="task-checkbox">
+                                        <input type="checkbox" id="task1">
+                                    </div>
+                                    <div class="task-content">
+                                        <h4 class="task-title">Implement user authentication API</h4>
+                                        <p class="task-description">Create JWT authentication endpoints for login and registration</p>
+                                        <div class="task-meta">
+                                            <span class="task-due">Due: Apr 25, 2025</span>
+                                            <span class="task-priority priority-high">High</span>
+                                        </div>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-outline btn-sm">Edit</button>
+                                    </div>
+                                </li>
+                                <li class="task-item">
+                                    <div class="task-checkbox">
+                                        <input type="checkbox" id="task2">
+                                    </div>
+                                    <div class="task-content">
+                                        <h4 class="task-title">Design dashboard interface</h4>
+                                        <p class="task-description">Create wireframes for the main dashboard and task views</p>
+                                        <div class="task-meta">
+                                            <span class="task-due">Due: Apr 28, 2025</span>
+                                            <span class="task-priority priority-medium">Medium</span>
+                                        </div>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-outline btn-sm">Edit</button>
+                                    </div>
+                                </li>
+                                <li class="task-item">
+                                    <div class="task-checkbox">
+                                        <input type="checkbox" id="task3">
+                                    </div>
+                                    <div class="task-content">
+                                        <h4 class="task-title">Set up CI/CD pipeline</h4>
+                                        <p class="task-description">Configure GitHub Actions for automatic testing and deployment</p>
+                                        <div class="task-meta">
+                                            <span class="task-due">Due: May 2, 2025</span>
+                                            <span class="task-priority priority-low">Low</span>
+                                        </div>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-outline btn-sm">Edit</button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Projects</h3>
+                            <a href="/projects" class="btn btn-outline btn-sm">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <ul class="task-list">
+                                <li class="task-item">
+                                    <div class="task-content">
+                                        <h4 class="task-title">Gaia Space Backend</h4>
+                                        <p class="task-description">Kotlin Spring Boot backend services</p>
+                                        <div class="task-meta">
+                                            <span>8 tasks · 3 members</span>
+                                        </div>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-outline btn-sm">Open</button>
+                                    </div>
+                                </li>
+                                <li class="task-item">
+                                    <div class="task-content">
+                                        <h4 class="task-title">Gaia Space Frontend</h4>
+                                        <p class="task-description">React-based web interface</p>
+                                        <div class="task-meta">
+                                            <span>12 tasks · 2 members</span>
+                                        </div>
+                                    </div>
+                                    <div class="task-actions">
+                                        <button class="btn btn-outline btn-sm">Open</button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="workspace-sidebar">
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">My Workspaces</h3>
+                        <ul class="sidebar-list">
+                            <li class="sidebar-item">
+                                <a href="/workspaces/1" class="sidebar-link">
+                                    <span class="sidebar-icon">🚀</span>
+                                    <span>Engineering Team</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="/workspaces/2" class="sidebar-link">
+                                    <span class="sidebar-icon">🎨</span>
+                                    <span>Design Team</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="/workspaces/3" class="sidebar-link">
+                                    <span class="sidebar-icon">📊</span>
+                                    <span>Product Team</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">Recent Activity</h3>
+                        <ul class="sidebar-list">
+                            <li class="sidebar-item">
+                                <div class="sidebar-link">
+                                    <span class="sidebar-icon">📝</span>
+                                    <span>New task created in Engineering Team</span>
+                                </div>
+                            </li>
+                            <li class="sidebar-item">
+                                <div class="sidebar-link">
+                                    <span class="sidebar-icon">👤</span>
+                                    <span>Alex joined Design Team</span>
+                                </div>
+                            </li>
+                            <li class="sidebar-item">
+                                <div class="sidebar-link">
+                                    <span class="sidebar-icon">✅</span>
+                                    <span>Task "Update documentation" completed</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">Integrations</h3>
+                        <ul class="sidebar-list">
+                            <li class="sidebar-item">
+                                <a href="/integrations/discord" class="sidebar-link">
+                                    <span class="sidebar-icon">💬</span>
+                                    <span>Discord</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="/integrations/github" class="sidebar-link">
+                                    <span class="sidebar-icon">📦</span>
+                                    <span>GitHub</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="/integrations" class="sidebar-link">
+                                    <span class="sidebar-icon">➕</span>
+                                    <span>Add integration</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="copyright">© 2025 Gaia Space. All rights reserved.</p>
+                <ul class="footer-links">
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/help">Help</a></li>
+                    <li><a href="/privacy">Privacy</a></li>
+                    <li><a href="/terms">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

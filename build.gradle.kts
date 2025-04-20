@@ -1,12 +1,12 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "3.2.0"
+    id("org.springframework.boot") version "3.2.2"
     id("io.spring.dependency-management") version "1.1.4"
-    kotlin("jvm") version "1.9.20"
-    kotlin("plugin.spring") version "1.9.20"
-    kotlin("plugin.jpa") version "1.9.20"
-    kotlin("plugin.serialization") version "1.9.20"
+    kotlin("jvm") version "1.9.22"
+    kotlin("plugin.spring") version "1.9.22"
+    kotlin("plugin.jpa") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 group = "com.gaiaspace"
@@ -28,6 +28,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    
+    // JWT Support
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
     
     // Kotlin Support
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -38,16 +44,17 @@ dependencies {
     
     // Database
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("com.h2database:h2")
     implementation("org.flywaydb:flyway-core")
     
-    // Discord API
-    implementation("com.discord4j:discord4j-core:3.2.5")
-    
     // Git Integration
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.7.0.202309050650-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.6.0.202305301015-r")
     
     // GraphQL Support
     implementation("org.springframework.boot:spring-boot-starter-graphql")
+    
+    // HTTP Client
+    implementation("org.springframework:spring-webflux")
     
     // Dev Tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
