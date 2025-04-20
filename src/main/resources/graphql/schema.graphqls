@@ -1,0 +1,467 @@
+"""
+User account information
+"""
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    displayName: String!
+    avatarUrl: String
+    createdAt: String!
+    updatedAt: String
+    roles: [String!]!
+}
+
+"""
+Workspace is a top-level organizational container
+"""
+type Workspace {
+    id: ID!
+    name: String!
+    description: String
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    avatarUrl: String
+    members: [WorkspaceMember!]!
+    channels: [Channel!]!
+    projects: [Project!]!
+}
+
+"""
+Workspace member represents a user's membership in a workspace
+"""
+type WorkspaceMember {
+    id: ID!
+    workspace: Workspace!
+    user: User!
+    role: String!
+    joinedAt: String!
+}
+
+"""
+Channel for communication within a workspace
+"""
+type Channel {
+    id: ID!
+    name: String!
+    description: String
+    type: ChannelType!
+    workspace: Workspace!
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    messages(offset: Int, limit: Int): [Message!]!
+}
+
+"""
+Message within a communication channel
+"""
+type Message {
+    id: ID!
+    content: String!
+    channel: Channel!
+    sender: User!
+    replyTo: Message
+    createdAt: String!
+    updatedAt: String
+    isEdited: Boolean!
+    attachments: [String!]!
+    reactions: [MessageReaction!]!
+}
+
+"""
+Reaction to a message
+"""
+type MessageReaction {
+    emoji: String!
+    user: User!
+}
+
+"""
+Project within a workspace
+"""
+type Project {
+    id: ID!
+    name: String!
+    description: String
+    workspace: Workspace!
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    status: ProjectStatus!
+    dueDate: String
+    avatarUrl: String
+    boards: [Board!]!
+    tasks: [Task!]!
+    documents: [Document!]!
+}
+
+"""
+Board for task visualization
+"""
+type Board {
+    id: ID!
+    name: String!
+    description: String
+    project: Project!
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    columns: [BoardColumn!]!
+}
+
+"""
+Column within a board
+"""
+type BoardColumn {
+    id: ID!
+    name: String!
+    position: Int!
+    board: Board!
+    tasks: [Task!]!
+}
+
+"""
+Task representing a work item
+"""
+type Task {
+    id: ID!
+    title: String!
+    description: String
+    project: Project!
+    assignee: User
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    status: TaskStatus!
+    priority: TaskPriority!
+    dueDate: String
+    estimatedHours: Float
+    spentHours: Float
+    dependencies: [TaskDependency!]!
+    comments: [TaskComment!]!
+    tags: [Tag!]!
+}
+
+"""
+Dependency between tasks
+"""
+type TaskDependency {
+    id: ID!
+    dependentTask: Task!
+    prerequisiteTask: Task!
+    type: DependencyType!
+}
+
+"""
+Comment on a task
+"""
+type TaskComment {
+    id: ID!
+    content: String!
+    task: Task!
+    author: User!
+    createdAt: String!
+    updatedAt: String
+    isEdited: Boolean!
+}
+
+"""
+Tag for categorizing tasks
+"""
+type Tag {
+    id: ID!
+    name: String!
+    colorHex: String
+    workspace: Workspace!
+}
+
+"""
+Document for knowledge sharing
+"""
+type Document {
+    id: ID!
+    title: String!
+    content: String
+    project: Project
+    parentDocument: Document
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    versions: [DocumentVersion!]!
+    children: [Document!]!
+}
+
+"""
+Version of a document
+"""
+type DocumentVersion {
+    id: ID!
+    version: Int!
+    content: String!
+    document: Document!
+    createdBy: User!
+    createdAt: String!
+    comment: String
+}
+
+"""
+Git repository
+"""
+type GitRepository {
+    id: ID!
+    name: String!
+    description: String
+    gitUrl: String!
+    provider: GitProvider!
+    workspace: Workspace!
+    project: Project
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    defaultBranch: String!
+    branches: [GitBranch!]!
+    mergeRequests: [MergeRequest!]!
+}
+
+"""
+Branch within a Git repository
+"""
+type GitBranch {
+    id: ID!
+    name: String!
+    repository: GitRepository!
+    createdBy: User!
+    createdAt: String!
+    lastCommitId: String
+    lastCommitMessage: String
+    lastCommitDate: String
+}
+
+"""
+Merge request for code review
+"""
+type MergeRequest {
+    id: ID!
+    title: String!
+    description: String
+    repository: GitRepository!
+    sourceBranch: String!
+    targetBranch: String!
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    status: MergeRequestStatus!
+    mergedAt: String
+    mergedBy: User
+    closedAt: String
+    closedBy: User
+    comments: [MergeRequestComment!]!
+}
+
+"""
+Comment on a merge request
+"""
+type MergeRequestComment {
+    id: ID!
+    content: String!
+    mergeRequest: MergeRequest!
+    filePath: String
+    lineNumber: Int
+    author: User!
+    createdAt: String!
+    updatedAt: String
+}
+
+"""
+Discord integration for connecting Discord servers to workspaces
+"""
+type DiscordIntegration {
+    id: ID!
+    workspace: Workspace!
+    discordServerId: String!
+    discordServerName: String!
+    tokenExpiresAt: String!
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String
+    isActive: Boolean!
+    channelMappings: [DiscordChannelMapping!]!
+}
+
+"""
+Mapping between Discord channels and Gaia channels
+"""
+type DiscordChannelMapping {
+    id: ID!
+    discordIntegration: DiscordIntegration!
+    discordChannelId: String!
+    discordChannelName: String!
+    gaiaChannel: Channel!
+    createdAt: String!
+    updatedAt: String
+    syncEnabled: Boolean!
+    syncDirection: SyncDirection!
+}
+
+"""
+Channel types
+"""
+enum ChannelType {
+    TEXT
+    VOICE
+    DOCUMENT
+    TASK
+    CALENDAR
+}
+
+"""
+Project status
+"""
+enum ProjectStatus {
+    PLANNING
+    ACTIVE
+    ON_HOLD
+    COMPLETED
+    CANCELED
+}
+
+"""
+Task status
+"""
+enum TaskStatus {
+    TODO
+    IN_PROGRESS
+    REVIEW
+    DONE
+    CANCELED
+}
+
+"""
+Task priority
+"""
+enum TaskPriority {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}
+
+"""
+Dependency type between tasks
+"""
+enum DependencyType {
+    BLOCKS
+    RELATES_TO
+    DUPLICATES
+}
+
+"""
+Git provider
+"""
+enum GitProvider {
+    GITHUB
+    GITLAB
+    BITBUCKET
+    GITEA
+    CUSTOM
+}
+
+"""
+Merge request status
+"""
+enum MergeRequestStatus {
+    OPEN
+    MERGED
+    CLOSED
+}
+
+"""
+Sync direction for Discord channel mappings
+"""
+enum SyncDirection {
+    DISCORD_TO_GAIA
+    GAIA_TO_DISCORD
+    BIDIRECTIONAL
+}
+
+"""
+Input for user registration
+"""
+input RegisterInput {
+    username: String!
+    email: String!
+    password: String!
+    displayName: String!
+}
+
+"""
+Input for user login
+"""
+input LoginInput {
+    usernameOrEmail: String!
+    password: String!
+}
+
+"""
+Input for creating a workspace
+"""
+input CreateWorkspaceInput {
+    name: String!
+    description: String
+    avatarUrl: String
+}
+
+type Query {
+    # User queries
+    me: User
+    user(id: ID!): User
+    
+    # Workspace queries
+    workspaces: [Workspace!]!
+    workspace(id: ID!): Workspace
+    workspaceWithDetails(id: ID!): Workspace
+    
+    # Project queries
+    projects(workspaceId: ID!): [Project!]!
+    project(id: ID!): Project
+    
+    # Task queries
+    tasks(projectId: ID!): [Task!]!
+    task(id: ID!): Task
+    tasksByStatus(projectId: ID!, status: TaskStatus!): [Task!]!
+    tasksByAssignee(assigneeId: ID!): [Task!]!
+    
+    # Channel queries
+    channels(workspaceId: ID!): [Channel!]!
+    channel(id: ID!): Channel
+    
+    # Discord integration queries
+    discordIntegrations(workspaceId: ID!): [DiscordIntegration!]!
+    discordIntegration(id: ID!): DiscordIntegration
+}
+
+type Mutation {
+    # User mutations
+    register(input: RegisterInput!): User!
+    login(input: LoginInput!): AuthPayload!
+    updateUser(displayName: String, avatarUrl: String): User!
+    changePassword(currentPassword: String!, newPassword: String!): Boolean!
+    
+    # Workspace mutations
+    createWorkspace(input: CreateWorkspaceInput!): Workspace!
+    updateWorkspace(id: ID!, name: String, description: String, avatarUrl: String): Workspace!
+    deleteWorkspace(id: ID!): Boolean!
+    addWorkspaceMember(workspaceId: ID!, userId: ID!, role: String!): WorkspaceMember!
+    removeWorkspaceMember(workspaceId: ID!, userId: ID!): Boolean!
+    updateMemberRole(workspaceId: ID!, userId: ID!, role: String!): WorkspaceMember!
+}
+
+"""
+Authentication response
+"""
+type AuthPayload {
+    token: String!
+    user: User!
+}

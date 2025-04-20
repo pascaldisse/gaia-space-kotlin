@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gaia_space_dev
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+logging:
+  level:
+    com.gaiaspace: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
