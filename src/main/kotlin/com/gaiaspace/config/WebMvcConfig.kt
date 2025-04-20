@@ -21,6 +21,7 @@ class WebMvcConfig : WebMvcConfigurer {
         
         // Add more view controllers for other static pages
         registry.addViewController("/tasks").setViewName("forward:/tasks.html")
+        registry.addViewController("/tasks/new").setViewName("forward:/tasks-new.html")
         registry.addViewController("/dashboard").setViewName("forward:/index.html")
         registry.addViewController("/workspaces").setViewName("forward:/index.html")
         registry.addViewController("/projects").setViewName("forward:/index.html")

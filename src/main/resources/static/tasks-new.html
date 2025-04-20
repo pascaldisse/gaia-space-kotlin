@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>New Task - Gaia Space</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gaia Space - Create New Task">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="/images/logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .task-form {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .required::after {
+            content: " *";
+            color: var(--danger-color);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .form-hint {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+            margin-top: 0.25rem;
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .checklist-item input[type="checkbox"] {
+            margin-top: 0.25rem;
+            margin-right: 0.5rem;
+        }
+        
+        .add-checklist-item {
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        
+        .add-checklist-item input {
+            flex: 1;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <img src="/images/logo.svg" alt="Gaia Space Logo"> Gaia Space
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/workspaces">Workspaces</a></li>
+                    <li><a href="/projects">Projects</a></li>
+                    <li><a href="/tasks" class="active">Tasks</a></li>
+                    <li><a href="/pipelines">Pipelines</a></li>
+                </ul>
+                <div class="user-menu">
+                    <a href="/api/users/login" class="btn btn-primary">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h2 class="page-title">Create New Task</h2>
+                <p class="page-subtitle">Add a task to track your work and stay organized</p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Task Form -->
+                <div class="task-form-container">
+                    <form class="task-form" id="new-task-form">
+                        <div class="form-group">
+                            <label for="task-title" class="form-label required">Title</label>
+                            <input type="text" id="task-title" class="form-control" placeholder="Enter task title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-description" class="form-label">Description</label>
+                            <textarea id="task-description" class="form-control" placeholder="Enter task description"></textarea>
+                            <span class="form-hint">Provide details about what needs to be done</span>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="task-project" class="form-label required">Project</label>
+                                <select id="task-project" class="form-control" required>
+                                    <option value="">Select a project</option>
+                                    <option value="1">Gaia Space Backend</option>
+                                    <option value="2">Gaia Space Frontend</option>
+                                    <option value="3">Documentation</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="task-status" class="form-label">Status</label>
+                                <select id="task-status" class="form-control">
+                                    <option value="open">Open</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="review">In Review</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="task-priority" class="form-label">Priority</label>
+                                <select id="task-priority" class="form-control">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="task-due-date" class="form-label">Due Date</label>
+                                <input type="date" id="task-due-date" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-assignee" class="form-label">Assignee</label>
+                            <select id="task-assignee" class="form-control">
+                                <option value="">Unassigned</option>
+                                <option value="1">Alex Johnson</option>
+                                <option value="2">Maria Garcia</option>
+                                <option value="3">David Kim</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Labels</label>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="label-feature">
+                                <label for="label-feature">Feature</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="label-bug">
+                                <label for="label-bug">Bug</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="label-documentation">
+                                <label for="label-documentation">Documentation</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="label-enhancement">
+                                <label for="label-enhancement">Enhancement</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Checklist</label>
+                            <div id="checklist-container">
+                                <div class="checklist-item">
+                                    <input type="checkbox" id="checklist-1">
+                                    <input type="text" class="form-control" placeholder="Checklist item" value="Research requirements">
+                                </div>
+                                <div class="checklist-item">
+                                    <input type="checkbox" id="checklist-2">
+                                    <input type="text" class="form-control" placeholder="Checklist item" value="Create implementation plan">
+                                </div>
+                            </div>
+                            <div class="add-checklist-item">
+                                <input type="text" class="form-control" id="new-checklist-item" placeholder="Add new item">
+                                <button type="button" class="btn btn-outline btn-sm" id="add-checklist-btn">Add</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <a href="/tasks" class="btn btn-outline">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Task</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="workspace-sidebar">
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">Tips for Task Creation</h3>
+                        <ul class="sidebar-list">
+                            <li class="sidebar-item">
+                                <div class="sidebar-link">
+                                    <span class="sidebar-icon">📝</span>
+                                    <span>Be specific and clear in your title</span>
+                                </div>
+                            </li>
+                            <li class="sidebar-item">
+                                <div class="sidebar-link">
+                                    <span class="sidebar-icon">📋</span>
+                                    <span>Include steps needed to complete the task</span>
+                                </div>
+                            </li>
+                            <li class="sidebar-item">
+                                <div class="sidebar-link">
+                                    <span class="sidebar-icon">⏰</span>
+                                    <span>Set realistic due dates</span>
+                                </div>
+                            </li>
+                            <li class="sidebar-item">
+                                <div class="sidebar-link">
+                                    <span class="sidebar-icon">🔄</span>
+                                    <span>Use checklists to track progress</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">Recent Tasks</h3>
+                        <ul class="sidebar-list">
+                            <li class="sidebar-item">
+                                <a href="/tasks/123" class="sidebar-link">
+                                    <span class="sidebar-icon">📊</span>
+                                    <span>Implement user authentication API</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="/tasks/124" class="sidebar-link">
+                                    <span class="sidebar-icon">🎨</span>
+                                    <span>Design dashboard interface</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-item">
+                                <a href="/tasks/125" class="sidebar-link">
+                                    <span class="sidebar-icon">⚙️</span>
+                                    <span>Set up CI/CD pipeline</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="copyright">© 2025 Gaia Space. All rights reserved.</p>
+                <ul class="footer-links">
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/help">Help</a></li>
+                    <li><a href="/privacy">Privacy</a></li>
+                    <li><a href="/terms">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add checklist item functionality
+            const addChecklistBtn = document.getElementById('add-checklist-btn');
+            const newChecklistItem = document.getElementById('new-checklist-item');
+            const checklistContainer = document.getElementById('checklist-container');
+            let checklistCounter = 3; // Start from 3 since we already have 2 items
+            
+            addChecklistBtn.addEventListener('click', function() {
+                if (newChecklistItem.value.trim() !== '') {
+                    const item = document.createElement('div');
+                    item.className = 'checklist-item';
+                    item.innerHTML = `
+                        <input type="checkbox" id="checklist-${checklistCounter}">
+                        <input type="text" class="form-control" placeholder="Checklist item" value="${newChecklistItem.value}">
+                    `;
+                    checklistContainer.appendChild(item);
+                    newChecklistItem.value = '';
+                    checklistCounter++;
+                }
+            });
+            
+            // Form submission
+            const newTaskForm = document.getElementById('new-task-form');
+            newTaskForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                // Here you would normally send an API request
+                console.log('Creating task:', {
+                    title: document.getElementById('task-title').value,
+                    description: document.getElementById('task-description').value,
+                    project: document.getElementById('task-project').value,
+                    status: document.getElementById('task-status').value,
+                    priority: document.getElementById('task-priority').value,
+                    dueDate: document.getElementById('task-due-date').value,
+                    assignee: document.getElementById('task-assignee').value
+                });
+                
+                // For demo, redirect back to tasks page
+                alert('Task created successfully!');
+                window.location.href = '/tasks';
+            });
+        });
+    </script>
+</body>
+</html>
