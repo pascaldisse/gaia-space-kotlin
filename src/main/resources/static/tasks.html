@@ -48,13 +48,14 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="task-filters">
+                            <div class="task-filters" id="task-filters">
                                 <div class="filter-group">
                                     <label for="status-filter">Status:</label>
                                     <select id="status-filter" class="form-control">
                                         <option value="all">All</option>
                                         <option value="open">Open</option>
                                         <option value="in-progress">In Progress</option>
+                                        <option value="review">In Review</option>
                                         <option value="completed">Completed</option>
                                     </select>
                                 </div>
@@ -73,11 +74,43 @@
                                         <option value="all">All Projects</option>
                                         <option value="1">Gaia Space Backend</option>
                                         <option value="2">Gaia Space Frontend</option>
+                                        <option value="3">Documentation</option>
                                     </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label for="assignee-filter">Assignee:</label>
+                                    <select id="assignee-filter" class="form-control">
+                                        <option value="all">All Assignees</option>
+                                        <option value="me">Assigned to Me</option>
+                                        <option value="unassigned">Unassigned</option>
+                                        <option value="1">Alex Johnson</option>
+                                        <option value="2">Maria Garcia</option>
+                                        <option value="3">David Kim</option>
+                                    </select>
+                                </div>
+                                <div class="filter-actions">
+                                    <button id="clear-filters" class="btn btn-outline btn-sm">Clear Filters</button>
+                                    <button id="apply-filters" class="btn btn-primary btn-sm">Apply Filters</button>
                                 </div>
                             </div>
                             
-                            <ul class="task-list">
+                            <div class="task-view-switcher">
+                                <span>View:</span>
+                                <button id="list-view" class="view-option active">List</button>
+                                <button id="grid-view" class="view-option">Grid</button>
+                                <div style="flex: 1;"></div>
+                                <span>Sort by:</span>
+                                <select id="sort-tasks" class="form-control" style="width: auto;">
+                                    <option value="due-date-asc">Due Date (Ascending)</option>
+                                    <option value="due-date-desc">Due Date (Descending)</option>
+                                    <option value="priority-desc">Priority (High to Low)</option>
+                                    <option value="priority-asc">Priority (Low to High)</option>
+                                    <option value="name-asc">Name (A-Z)</option>
+                                    <option value="name-desc">Name (Z-A)</option>
+                                </select>
+                            </div>
+                            
+                            <ul class="task-list" id="task-list">
                                 <li class="task-item">
                                     <div class="task-checkbox">
                                         <input type="checkbox" id="task1">
@@ -266,5 +299,6 @@
     </footer>
 
     <script src="/js/app.js"></script>
+    <script src="/js/task-view.js"></script>
 </body>
 </html>
