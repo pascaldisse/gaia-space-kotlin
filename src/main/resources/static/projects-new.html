@@ -228,6 +228,8 @@
                 <div class="form-actions">
                     <a href="/projects" class="btn btn-outline">Cancel</a>
                     <button type="button" id="create-project-btn" class="btn btn-primary">Create Project</button>
+                    <!-- Add a test localStorage button for debugging -->
+                    <button type="button" id="test-storage-btn" class="btn btn-outline">Test Storage</button>
                 </div>
             </form>
         </div>
@@ -250,6 +252,33 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Add event listener for the test storage button
+            const testStorageBtn = document.getElementById('test-storage-btn');
+            if (testStorageBtn) {
+                testStorageBtn.addEventListener('click', function() {
+                    // Test if localStorage works properly in this browser/domain
+                    try {
+                        localStorage.setItem('testKey', 'Test value from projects-new page: ' + new Date().toISOString());
+                        const testValue = localStorage.getItem('testKey');
+                        alert('localStorage test: ' + (testValue ? 'SUCCESS - ' + testValue : 'FAILED'));
+                        console.log('localStorage test value:', testValue);
+                        
+                        // Check if we can store larger values
+                        const largeValue = 'X'.repeat(10000); // 10KB string
+                        localStorage.setItem('largeTestKey', largeValue);
+                        const retrievedSize = localStorage.getItem('largeTestKey')?.length || 0;
+                        console.log('Large value storage test:', retrievedSize === 10000 ? 'SUCCESS' : 'FAILED');
+                        console.log('Retrieved size:', retrievedSize);
+                        
+                        // Clean up
+                        localStorage.removeItem('largeTestKey');
+                    } catch (e) {
+                        alert('localStorage ERROR: ' + e.message);
+                        console.error('localStorage error:', e);
+                    }
+                });
+            }
+            
             // Icon selector
             const iconOptions = document.querySelectorAll('.icon-option');
             const iconInput = document.querySelector('input[name="icon"]');
@@ -347,35 +376,51 @@
 </div>`;
                     
                     // In a real app, we would store this in the database via API
+                    console.log('Creating new project and preparing to save to localStorage');
+                    
                     try {
-                        // Create a simple JSON object that's more reliable for storage
+                        // Create a simpler JSON object
                         const projectData = {
                             name: projectName,
                             description: projectDescription,
                             workspace: workspaceName,
                             status: projectStatus,
                             icon: projectIcon,
-                            date: formattedDate
+                            date: formattedDate,
+                            created: new Date().toISOString()
                         };
                         
-                        // Store both the HTML and the data object
-                        localStorage.setItem('newProjectHTML', projectHTML);
-                        localStorage.setItem('newProjectData', JSON.stringify(projectData));
+                        // Store the data as a string to avoid JSON parsing issues
+                        const projectDataString = JSON.stringify(projectData);
                         
-                        // Verify the data was saved correctly
-                        console.log('New project created:');
-                        console.log(`- Name: ${projectName}`);
-                        console.log(`- Workspace: ${workspaceName}`);
-                        console.log(`- Status: ${projectStatus}`);
-                        console.log(`- Icon: ${projectIcon}`);
-                        console.log('Project data saved to localStorage');
+                        // Log before saving
+                        console.log('Saving project data to localStorage:');
+                        console.log('Data string length:', projectDataString.length);
+                        console.log('Project data:', projectData);
+                        
+                        // Try to save to localStorage
+                        localStorage.clear(); // Clear any old data first
+                        localStorage.setItem('newProject', projectName); // Simple string first
+                        localStorage.setItem('projectData', projectDataString); // Then the full data
+                        
+                        // Verify it was saved correctly
+                        const savedProject = localStorage.getItem('newProject');
+                        const savedData = localStorage.getItem('projectData');
+                        
+                        console.log('Verification - Project name in localStorage:', savedProject);
+                        console.log('Verification - Project data retrieved:', savedData ? 'Yes (length: ' + savedData.length + ')' : 'No');
+                        
+                        if (!savedProject || !savedData) {
+                            throw new Error('Failed to save to localStorage');
+                        }
+                        
+                        // Alert user and redirect with a query parameter
+                        alert('Project "' + projectName + '" created successfully!');
+                        window.location.href = '/projects?new=' + encodeURIComponent(projectName);
                     } catch (e) {
                         console.error('Error saving to localStorage:', e);
+                        alert('Error saving project: ' + e.message + '\nCheck console for details.');
                     }
-                    
-                    // Alert user and redirect
-                    alert('Project created successfully!');
-                    window.location.href = '/projects';
                 } else {
                     projectForm.reportValidity();
                 }

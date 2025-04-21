@@ -337,6 +337,28 @@
     <script src="/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Add a test button to check localStorage (for debugging)
+            const projectsList = document.querySelector('.projects-list');
+            if (projectsList) {
+                const testButton = document.createElement('button');
+                testButton.innerText = 'Test localStorage';
+                testButton.style.marginBottom = '20px';
+                testButton.style.padding = '10px';
+                testButton.addEventListener('click', function() {
+                    // Manual test to verify if localStorage works on this domain
+                    try {
+                        localStorage.setItem('testItem', 'This is a test ' + new Date().toISOString());
+                        const testValue = localStorage.getItem('testItem');
+                        alert('localStorage test: ' + (testValue ? 'SUCCESS - ' + testValue : 'FAILED'));
+                        console.log('localStorage test value:', testValue);
+                    } catch (e) {
+                        alert('localStorage ERROR: ' + e.message);
+                        console.error('localStorage error:', e);
+                    }
+                });
+                projectsList.parentNode.insertBefore(testButton, projectsList);
+            }
+            
             // Log all existing project elements in the projects-list
             const existingProjects = document.querySelectorAll('.projects-list .project-card');
             console.log(`Found ${existingProjects.length} existing projects in the list:`);
@@ -346,22 +368,47 @@
                 console.log(`Project ${index + 1}: "${projectTitle}"`);
             });
             
-            // Check if we have a new project from the create form
+            // Check if we have a new project from URL parameter or localStorage
             try {
-                console.log('Checking localStorage for new project...');
+                console.log('Checking for new project...');
                 
-                // Try to get project data (more reliable than HTML)
-                const projectDataStr = localStorage.getItem('newProjectData');
-                const projectHTML = localStorage.getItem('newProjectHTML');
+                // Get URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const newProjectName = urlParams.get('new');
                 
-                console.log('localStorage project data:', projectDataStr ? 'Found' : 'Not found');
-                console.log('localStorage project HTML:', projectHTML ? 'Found (length: ' + projectHTML.length + ')' : 'Not found');
+                if (newProjectName) {
+                    console.log('New project detected from URL parameter:', newProjectName);
+                }
                 
+                // Check localStorage
+                const projectName = localStorage.getItem('newProject');
+                const projectDataStr = localStorage.getItem('projectData');
+                
+                console.log('localStorage check:');
+                console.log('- Project name:', projectName || 'Not found');
+                console.log('- Project data:', projectDataStr ? 'Found (length: ' + projectDataStr.length + ')' : 'Not found');
+                
+                // Create a notice about the new project
+                if (newProjectName || projectName) {
+                    const projectsList = document.querySelector('.projects-list');
+                    if (projectsList) {
+                        const notice = document.createElement('div');
+                        notice.style.padding = '10px';
+                        notice.style.marginBottom = '20px';
+                        notice.style.backgroundColor = '#4caf50';
+                        notice.style.color = 'white';
+                        notice.style.borderRadius = '4px';
+                        notice.textContent = `New project "${newProjectName || projectName}" was created successfully!`;
+                        projectsList.parentNode.insertBefore(notice, projectsList);
+                    }
+                }
+                
+                // Try to create the new project card
                 if (projectDataStr) {
                     try {
                         // Parse the project data
                         const projectData = JSON.parse(projectDataStr);
-                        console.log('New project found in localStorage:', projectData.name);
+                        console.log('Project data parsed successfully:', projectData);
                         
                         // Insert the new project at the beginning of the projects list
                         const projectsList = document.querySelector('.projects-list');
@@ -370,95 +417,114 @@
                             return;
                         }
                         
-                        // Use the HTML if available, otherwise create from data
-                        let newProjectHTML = projectHTML;
-                        if (!newProjectHTML) {
-                            // Create HTML from the data if HTML is not available
-                            const statusCapitalized = projectData.status.charAt(0).toUpperCase() + projectData.status.slice(1);
-                            newProjectHTML = `<div class="project-card">
-<div class="project-header">
-<div class="project-title-section">
-<div class="project-icon workspace-color-1">${projectData.icon}</div>
-<div class="project-info">
-<h3 class="project-title">${projectData.name}</h3>
-<p class="project-subtitle">
-<span class="project-workspace">${projectData.workspace}</span>
-<span class="separator">•</span>
-<span>Created ${projectData.date}</span>
-<span class="project-status status-${projectData.status}">${statusCapitalized}</span>
-</p>
-</div>
-</div>
-<div class="project-actions">
-<button class="btn btn-outline btn-sm">Settings</button>
-<a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
-</div>
-</div>
-<p class="project-description">${projectData.description}</p>
-<div class="project-meta">
-<div class="meta-item">
-<span class="meta-icon">📊</span>
-<span>0 Tasks</span>
-</div>
-<div class="meta-item">
-<span class="meta-icon">📝</span>
-<span>0 Documents</span>
-</div>
-<div class="meta-item">
-<span class="meta-icon">📦</span>
-<span>0 Repositories</span>
-</div>
-</div>
-<div class="project-progress">
-<div class="progress-header">
-<p class="progress-title">Overall Progress</p>
-<span class="progress-percent">0%</span>
-</div>
-<div class="progress-bar">
-<div class="progress-value" style="width: 0%;"></div>
-</div>
-</div>
-</div>`;
-                        }
+                        // Create HTML for the new project
+                        const statusCapitalized = projectData.status.charAt(0).toUpperCase() + projectData.status.slice(1);
                         
-                        // Insert the HTML
-                        console.log('Inserting project HTML into the DOM');
-                        projectsList.insertAdjacentHTML('afterbegin', newProjectHTML);
-                        console.log('Project HTML inserted into DOM');
+                        // Create a simplified HTML string to reduce potential issues
+                        const newProject = document.createElement('div');
+                        newProject.className = 'project-card';
+                        newProject.innerHTML = `
+                            <div class="project-header">
+                                <div class="project-title-section">
+                                    <div class="project-icon workspace-color-1">${projectData.icon}</div>
+                                    <div class="project-info">
+                                        <h3 class="project-title">${projectData.name}</h3>
+                                        <p class="project-subtitle">
+                                            <span class="project-workspace">${projectData.workspace}</span>
+                                            <span class="separator">•</span>
+                                            <span>Created ${projectData.date}</span>
+                                            <span class="project-status status-${projectData.status}">${statusCapitalized}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="project-actions">
+                                    <button class="btn btn-outline btn-sm">Settings</button>
+                                    <a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
+                                </div>
+                            </div>
+                            <p class="project-description">${projectData.description}</p>
+                            <div class="project-meta">
+                                <div class="meta-item">
+                                    <span class="meta-icon">📊</span>
+                                    <span>0 Tasks</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-icon">📝</span>
+                                    <span>0 Documents</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-icon">📦</span>
+                                    <span>0 Repositories</span>
+                                </div>
+                            </div>
+                            <div class="project-progress">
+                                <div class="progress-header">
+                                    <p class="progress-title">Overall Progress</p>
+                                    <span class="progress-percent">0%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-value" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        `;
                         
-                        // Log the newly added project details
-                        console.log(`New project added: "${projectData.name}"`);
-                        console.log(`Details: Workspace: ${projectData.workspace}, Status: ${projectData.status}`);
+                        // Insert at the beginning
+                        console.log('Inserting new project into DOM');
+                        projectsList.insertBefore(newProject, projectsList.firstChild);
+                        console.log('New project inserted into DOM');
                         
-                        // Remove the items from local storage to avoid duplicating
-                        localStorage.removeItem('newProjectData');
-                        localStorage.removeItem('newProjectHTML');
+                        // Log success
+                        console.log(`New project added to DOM: "${projectData.name}"`);
+                        
+                        // Update the count display
+                        const projectCount = document.createElement('div');
+                        projectCount.style.marginBottom = '10px';
+                        projectCount.textContent = `Project count: ${document.querySelectorAll('.project-card').length}`;
+                        projectsList.parentNode.insertBefore(projectCount, projectsList);
+                        
+                        // Clean up localStorage
+                        localStorage.removeItem('newProject');
+                        localStorage.removeItem('projectData');
                         console.log('Project data cleared from localStorage');
                     } catch (parseErr) {
-                        console.error('Error parsing project data:', parseErr);
+                        console.error('Error creating new project from data:', parseErr);
                     }
-                } 
-                // Check for old format as fallback (can remove this in the future)
-                else if (projectHTML) {
-                    console.log('Found project HTML using old format');
-                    
-                    try {
-                        // Insert the new project at the beginning of the projects list
-                        const projectsList = document.querySelector('.projects-list');
-                        if (projectsList) {
-                            projectsList.insertAdjacentHTML('afterbegin', projectHTML);
-                            console.log('Project HTML inserted into DOM using old format');
-                            
-                            // Remove the items from local storage to avoid duplicating
-                            localStorage.removeItem('newProjectHTML');
-                            console.log('Project HTML cleared from localStorage');
-                        }
-                    } catch (htmlErr) {
-                        console.error('Error adding project HTML to DOM:', htmlErr);
+                } else if (newProjectName) {
+                    console.log('No project data found in localStorage, but URL parameter detected');
+                    // Create a simplified version based on just the name
+                    const projectsList = document.querySelector('.projects-list');
+                    if (projectsList) {
+                        const newProject = document.createElement('div');
+                        newProject.className = 'project-card';
+                        newProject.innerHTML = `
+                            <div class="project-header">
+                                <div class="project-title-section">
+                                    <div class="project-icon workspace-color-1">🚀</div>
+                                    <div class="project-info">
+                                        <h3 class="project-title">${newProjectName}</h3>
+                                        <p class="project-subtitle">
+                                            <span class="project-workspace">General</span>
+                                            <span class="separator">•</span>
+                                            <span>Created today</span>
+                                            <span class="project-status status-active">Active</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="project-actions">
+                                    <button class="btn btn-outline btn-sm">Settings</button>
+                                    <a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
+                                </div>
+                            </div>
+                            <p class="project-description">Project created from URL parameter.</p>
+                        `;
+                        
+                        // Insert at the beginning
+                        projectsList.insertBefore(newProject, projectsList.firstChild);
+                        console.log('Fallback project inserted into DOM based on URL parameter');
                     }
                 }
             } catch (e) {
-                console.error('Error retrieving from localStorage:', e);
+                console.error('Error handling new project:', e);
             }
             
             // Workspace filter functionality
