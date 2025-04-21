@@ -91,7 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const newEditBtn = document.querySelector(`#${taskId} .task-actions .btn`);
           if (newEditBtn) {
             newEditBtn.addEventListener('click', function() {
-              alert(`Editing task: ${taskTitle}`);
+              if (typeof openEditModal === 'function') {
+                const taskItem = this.closest('.task-item');
+                openEditModal(taskItem);
+              }
             });
           }
           

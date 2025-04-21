@@ -144,13 +144,14 @@ function setupEventListeners() {
     editBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const taskItem = this.closest('.task-item');
-            const taskTitle = taskItem.querySelector('.task-title').textContent;
-            
             if (!this.getAttribute('href')) {
-                alert(`Editing task: ${taskTitle}`);
+                openEditModal(taskItem);
             }
         });
     });
+    
+    // Setup modal event listeners
+    setupEditModal();
     
     // Sort dropdown
     const sortSelect = document.getElementById('sort-tasks');
@@ -320,4 +321,128 @@ function showNotification(message, type = 'info') {
             document.body.removeChild(notification);
         }, 300);
     }, 3000);
+}
+
+// Edit Modal Functions
+function setupEditModal() {
+    const modal = document.getElementById('edit-task-modal');
+    const closeBtn = document.querySelector('.close-modal');
+    const cancelBtn = document.getElementById('cancel-edit');
+    const editForm = document.getElementById('edit-task-form');
+    
+    // Close modal when clicking X
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+    
+    // Close modal when clicking Cancel
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    // Handle form submission
+    if (editForm) {
+        editForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Get form values
+            const taskId = document.getElementById('edit-task-id').value;
+            const title = document.getElementById('edit-task-title').value;
+            const description = document.getElementById('edit-task-description').value;
+            const project = document.getElementById('edit-task-project').value;
+            const priority = document.getElementById('edit-task-priority').value;
+            const status = document.getElementById('edit-task-status').value;
+            
+            // Find the task in the DOM
+            const taskItem = document.getElementById(taskId);
+            if (!taskItem) {
+                showNotification('Could not find task to update', 'error');
+                return;
+            }
+            
+            // Get project name based on value
+            let projectName = 'Gaia Space Backend';
+            if (project === '2') projectName = 'Gaia Space Frontend';
+            if (project === '3') projectName = 'Documentation';
+            
+            // Update the task in the DOM
+            taskItem.querySelector('.task-title').textContent = title;
+            taskItem.querySelector('.task-description').textContent = description || '';
+            taskItem.querySelector('.task-project').textContent = projectName;
+            
+            // Update the priority element
+            const priorityEl = taskItem.querySelector('.task-priority');
+            if (priorityEl) {
+                priorityEl.className = `task-priority priority-${priority}`;
+                priorityEl.setAttribute('data-value', priority);
+                priorityEl.textContent = capitalizeFirstLetter(priority);
+            }
+            
+            // Update data attributes
+            taskItem.setAttribute('data-priority', priority);
+            taskItem.setAttribute('data-project', project);
+            taskItem.setAttribute('data-status', status);
+            
+            // Update checkbox state if status changed
+            const checkbox = taskItem.querySelector('.task-checkbox input');
+            if (checkbox) {
+                checkbox.checked = status === 'completed';
+                
+                // Update task appearance based on status
+                if (status === 'completed') {
+                    taskItem.classList.add('completed');
+                } else {
+                    taskItem.classList.remove('completed');
+                }
+            }
+            
+            // Close the modal
+            modal.style.display = 'none';
+            
+            // Show success notification
+            showNotification('Task updated successfully!', 'success');
+            
+            // Update task counts
+            updateTaskCounts();
+        });
+    }
+}
+
+function openEditModal(taskItem) {
+    const modal = document.getElementById('edit-task-modal');
+    if (!modal) return;
+    
+    // Extract task data
+    const taskId = taskItem.id;
+    const title = taskItem.querySelector('.task-title').textContent;
+    const description = taskItem.querySelector('.task-description').textContent;
+    const priority = taskItem.getAttribute('data-priority') || 'medium';
+    const project = taskItem.getAttribute('data-project') || '1';
+    const status = taskItem.getAttribute('data-status') || 'open';
+    
+    // Populate the form
+    document.getElementById('edit-task-id').value = taskId;
+    document.getElementById('edit-task-title').value = title;
+    document.getElementById('edit-task-description').value = description;
+    document.getElementById('edit-task-priority').value = priority;
+    document.getElementById('edit-task-project').value = project;
+    document.getElementById('edit-task-status').value = status;
+    
+    // Display the modal
+    modal.style.display = 'block';
+}
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
