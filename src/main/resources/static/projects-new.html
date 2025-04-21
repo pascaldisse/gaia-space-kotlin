@@ -354,6 +354,14 @@
                     // In a real app, we would store this in the database via API
                     localStorage.setItem('newProject', projectHTML);
                     
+                    // Log project creation details
+                    console.log('New project created:');
+                    console.log(`- Name: ${projectName}`);
+                    console.log(`- Workspace: ${workspaceName}`);
+                    console.log(`- Status: ${projectStatus}`);
+                    console.log(`- Icon: ${projectIcon}`);
+                    console.log('Project data saved to localStorage');
+                    
                     // Alert user and redirect
                     alert('Project created successfully!');
                     window.location.href = '/projects';

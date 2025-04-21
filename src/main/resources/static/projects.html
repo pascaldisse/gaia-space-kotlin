@@ -337,15 +337,36 @@
     <script src="/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Log all existing project elements in the projects-list
+            const existingProjects = document.querySelectorAll('.projects-list .project-card');
+            console.log(`Found ${existingProjects.length} existing projects in the list:`);
+            
+            existingProjects.forEach((project, index) => {
+                const projectTitle = project.querySelector('.project-title')?.textContent || 'Unnamed project';
+                console.log(`Project ${index + 1}: "${projectTitle}"`);
+            });
+            
             // Check if we have a new project from the create form
             const newProject = localStorage.getItem('newProject');
             if (newProject) {
+                console.log('New project found in localStorage, adding to projects list');
+                
                 // Insert the new project at the beginning of the projects list
                 const projectsList = document.querySelector('.projects-list');
                 projectsList.insertAdjacentHTML('afterbegin', newProject);
                 
+                // Log the newly added project details
+                const addedProject = projectsList.querySelector('.project-card');
+                const projectTitle = addedProject.querySelector('.project-title')?.textContent || 'Unnamed project';
+                const projectWorkspace = addedProject.querySelector('.project-workspace')?.textContent || 'Unknown workspace';
+                const projectStatus = addedProject.querySelector('.project-status')?.textContent || 'Unknown status';
+                
+                console.log(`New project added: "${projectTitle}"`);
+                console.log(`Details: Workspace: ${projectWorkspace}, Status: ${projectStatus}`);
+                
                 // Remove the item from local storage to avoid duplicating
                 localStorage.removeItem('newProject');
+                console.log('Project data cleared from localStorage');
             }
             
             // Workspace filter functionality
