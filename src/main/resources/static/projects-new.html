@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>New Project - Gaia Space</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gaia Space - Create New Project">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+    <link rel="icon" href="/images/logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .project-form {
+            background-color: var(--bg-medium);
+            border-radius: 8px;
+            border: 1px solid var(--border-primary);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .required::after {
+            content: " *";
+            color: var(--accent-red);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .form-hint {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .icon-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .icon-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .icon-option:hover, .icon-option.selected {
+            background-color: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+        
+        .color-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--border-primary);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .color-option:hover, .color-option.selected {
+            transform: scale(1.1);
+            border-color: white;
+        }
+        
+        .color-blue { background-color: var(--accent-blue); }
+        .color-green { background-color: var(--accent-green); }
+        .color-red { background-color: var(--accent-red); }
+        .color-yellow { background-color: var(--accent-yellow); }
+        .color-purple { background-color: #9B59B6; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <img src="/images/logo.png" alt="Gaia Space Logo"> Gaia Space
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/workspaces">Workspaces</a></li>
+                    <li><a href="/projects" class="active">Projects</a></li>
+                    <li><a href="/tasks">Tasks</a></li>
+                </ul>
+                <div class="user-menu">
+                    <a href="/api/users/login" class="btn btn-primary">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h2 class="page-title">Create New Project</h2>
+                <p class="page-subtitle">Set up a new project to organize your team's work</p>
+            </div>
+            
+            <form class="project-form" id="new-project-form">
+                <div class="form-group">
+                    <label for="project-name" class="form-label required">Project Name</label>
+                    <input type="text" id="project-name" name="name" class="form-control" placeholder="Enter project name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="project-description" class="form-label">Description</label>
+                    <textarea id="project-description" name="description" class="form-control" placeholder="Describe your project..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project-workspace" class="form-label required">Workspace</label>
+                        <select id="project-workspace" name="workspaceId" class="form-control" required>
+                            <option value="" disabled selected>Select a workspace</option>
+                            <option value="1">Engineering</option>
+                            <option value="2">Design</option>
+                            <option value="3">Marketing</option>
+                            <option value="4">Product</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-status" class="form-label">Status</label>
+                        <select id="project-status" name="status" class="form-control">
+                            <option value="planning">Planning</option>
+                            <option value="active" selected>Active</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Project Icon</label>
+                    <div class="icon-selector">
+                        <div class="icon-option selected">🚀</div>
+                        <div class="icon-option">🔧</div>
+                        <div class="icon-option">💻</div>
+                        <div class="icon-option">📱</div>
+                        <div class="icon-option">🎨</div>
+                        <div class="icon-option">📊</div>
+                        <div class="icon-option">📝</div>
+                        <div class="icon-option">🔍</div>
+                    </div>
+                    <input type="hidden" name="icon" value="🚀">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Color Theme</label>
+                    <div class="color-selector">
+                        <div class="color-option color-blue selected" data-color="blue"></div>
+                        <div class="color-option color-green" data-color="green"></div>
+                        <div class="color-option color-red" data-color="red"></div>
+                        <div class="color-option color-yellow" data-color="yellow"></div>
+                        <div class="color-option color-purple" data-color="purple"></div>
+                    </div>
+                    <input type="hidden" name="colorTheme" value="blue">
+                </div>
+                
+                <div class="form-actions">
+                    <a href="/projects" class="btn btn-outline">Cancel</a>
+                    <button type="button" id="create-project-btn" class="btn btn-primary">Create Project</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="copyright">© 2025 Gaia Space. All rights reserved.</p>
+                <ul class="footer-links">
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/help">Help</a></li>
+                    <li><a href="/privacy">Privacy</a></li>
+                    <li><a href="/terms">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Icon selector
+            const iconOptions = document.querySelectorAll('.icon-option');
+            const iconInput = document.querySelector('input[name="icon"]');
+            
+            iconOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    iconOptions.forEach(opt => opt.classList.remove('selected'));
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    // Update hidden input
+                    iconInput.value = this.textContent;
+                });
+            });
+            
+            // Color selector
+            const colorOptions = document.querySelectorAll('.color-option');
+            const colorInput = document.querySelector('input[name="colorTheme"]');
+            
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    // Update hidden input
+                    colorInput.value = this.dataset.color;
+                });
+            });
+            
+            // Form submission
+            const createButton = document.getElementById('create-project-btn');
+            const projectForm = document.getElementById('new-project-form');
+            
+            createButton.addEventListener('click', function() {
+                if (projectForm.checkValidity()) {
+                    // Normally we would submit to backend here
+                    // For now, just redirect back to projects page with success alert
+                    alert('Project created successfully! (Note: This is a demo - in a real application, this would be saved to the database)');
+                    window.location.href = '/projects';
+                } else {
+                    projectForm.reportValidity();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
