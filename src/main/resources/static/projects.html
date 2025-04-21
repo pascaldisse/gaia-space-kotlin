@@ -347,26 +347,118 @@
             });
             
             // Check if we have a new project from the create form
-            const newProject = localStorage.getItem('newProject');
-            if (newProject) {
-                console.log('New project found in localStorage, adding to projects list');
+            try {
+                console.log('Checking localStorage for new project...');
                 
-                // Insert the new project at the beginning of the projects list
-                const projectsList = document.querySelector('.projects-list');
-                projectsList.insertAdjacentHTML('afterbegin', newProject);
+                // Try to get project data (more reliable than HTML)
+                const projectDataStr = localStorage.getItem('newProjectData');
+                const projectHTML = localStorage.getItem('newProjectHTML');
                 
-                // Log the newly added project details
-                const addedProject = projectsList.querySelector('.project-card');
-                const projectTitle = addedProject.querySelector('.project-title')?.textContent || 'Unnamed project';
-                const projectWorkspace = addedProject.querySelector('.project-workspace')?.textContent || 'Unknown workspace';
-                const projectStatus = addedProject.querySelector('.project-status')?.textContent || 'Unknown status';
+                console.log('localStorage project data:', projectDataStr ? 'Found' : 'Not found');
+                console.log('localStorage project HTML:', projectHTML ? 'Found (length: ' + projectHTML.length + ')' : 'Not found');
                 
-                console.log(`New project added: "${projectTitle}"`);
-                console.log(`Details: Workspace: ${projectWorkspace}, Status: ${projectStatus}`);
-                
-                // Remove the item from local storage to avoid duplicating
-                localStorage.removeItem('newProject');
-                console.log('Project data cleared from localStorage');
+                if (projectDataStr) {
+                    try {
+                        // Parse the project data
+                        const projectData = JSON.parse(projectDataStr);
+                        console.log('New project found in localStorage:', projectData.name);
+                        
+                        // Insert the new project at the beginning of the projects list
+                        const projectsList = document.querySelector('.projects-list');
+                        if (!projectsList) {
+                            console.error('Could not find .projects-list element');
+                            return;
+                        }
+                        
+                        // Use the HTML if available, otherwise create from data
+                        let newProjectHTML = projectHTML;
+                        if (!newProjectHTML) {
+                            // Create HTML from the data if HTML is not available
+                            const statusCapitalized = projectData.status.charAt(0).toUpperCase() + projectData.status.slice(1);
+                            newProjectHTML = `<div class="project-card">
+<div class="project-header">
+<div class="project-title-section">
+<div class="project-icon workspace-color-1">${projectData.icon}</div>
+<div class="project-info">
+<h3 class="project-title">${projectData.name}</h3>
+<p class="project-subtitle">
+<span class="project-workspace">${projectData.workspace}</span>
+<span class="separator">•</span>
+<span>Created ${projectData.date}</span>
+<span class="project-status status-${projectData.status}">${statusCapitalized}</span>
+</p>
+</div>
+</div>
+<div class="project-actions">
+<button class="btn btn-outline btn-sm">Settings</button>
+<a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
+</div>
+</div>
+<p class="project-description">${projectData.description}</p>
+<div class="project-meta">
+<div class="meta-item">
+<span class="meta-icon">📊</span>
+<span>0 Tasks</span>
+</div>
+<div class="meta-item">
+<span class="meta-icon">📝</span>
+<span>0 Documents</span>
+</div>
+<div class="meta-item">
+<span class="meta-icon">📦</span>
+<span>0 Repositories</span>
+</div>
+</div>
+<div class="project-progress">
+<div class="progress-header">
+<p class="progress-title">Overall Progress</p>
+<span class="progress-percent">0%</span>
+</div>
+<div class="progress-bar">
+<div class="progress-value" style="width: 0%;"></div>
+</div>
+</div>
+</div>`;
+                        }
+                        
+                        // Insert the HTML
+                        console.log('Inserting project HTML into the DOM');
+                        projectsList.insertAdjacentHTML('afterbegin', newProjectHTML);
+                        console.log('Project HTML inserted into DOM');
+                        
+                        // Log the newly added project details
+                        console.log(`New project added: "${projectData.name}"`);
+                        console.log(`Details: Workspace: ${projectData.workspace}, Status: ${projectData.status}`);
+                        
+                        // Remove the items from local storage to avoid duplicating
+                        localStorage.removeItem('newProjectData');
+                        localStorage.removeItem('newProjectHTML');
+                        console.log('Project data cleared from localStorage');
+                    } catch (parseErr) {
+                        console.error('Error parsing project data:', parseErr);
+                    }
+                } 
+                // Check for old format as fallback (can remove this in the future)
+                else if (projectHTML) {
+                    console.log('Found project HTML using old format');
+                    
+                    try {
+                        // Insert the new project at the beginning of the projects list
+                        const projectsList = document.querySelector('.projects-list');
+                        if (projectsList) {
+                            projectsList.insertAdjacentHTML('afterbegin', projectHTML);
+                            console.log('Project HTML inserted into DOM using old format');
+                            
+                            // Remove the items from local storage to avoid duplicating
+                            localStorage.removeItem('newProjectHTML');
+                            console.log('Project HTML cleared from localStorage');
+                        }
+                    } catch (htmlErr) {
+                        console.error('Error adding project HTML to DOM:', htmlErr);
+                    }
+                }
+            } catch (e) {
+                console.error('Error retrieving from localStorage:', e);
             }
             
             // Workspace filter functionality

@@ -300,67 +300,78 @@
                     const today = new Date();
                     const formattedDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     
-                    const projectHTML = `
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div class="project-title-section">
-                                <div class="project-icon workspace-color-1">${projectIcon}</div>
-                                <div class="project-info">
-                                    <h3 class="project-title">${projectName}</h3>
-                                    <p class="project-subtitle">
-                                        <span class="project-workspace">${workspaceName}</span>
-                                        <span class="separator">•</span>
-                                        <span>Created ${formattedDate}</span>
-                                        <span class="project-status status-${projectStatus}">${projectStatus.charAt(0).toUpperCase() + projectStatus.slice(1)}</span>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="project-actions">
-                                <button class="btn btn-outline btn-sm">Settings</button>
-                                <a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
-                            </div>
-                        </div>
-                        
-                        <p class="project-description">
-                            ${projectDescription}
-                        </p>
-                        
-                        <div class="project-meta">
-                            <div class="meta-item">
-                                <span class="meta-icon">📊</span>
-                                <span>0 Tasks</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-icon">📝</span>
-                                <span>0 Documents</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-icon">📦</span>
-                                <span>0 Repositories</span>
-                            </div>
-                        </div>
-                        
-                        <div class="project-progress">
-                            <div class="progress-header">
-                                <p class="progress-title">Overall Progress</p>
-                                <span class="progress-percent">0%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-value" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>`;
+                    // Create a cleaner HTML string without extra indentation
+                    const projectHTML = `<div class="project-card">
+<div class="project-header">
+<div class="project-title-section">
+<div class="project-icon workspace-color-1">${projectIcon}</div>
+<div class="project-info">
+<h3 class="project-title">${projectName}</h3>
+<p class="project-subtitle">
+<span class="project-workspace">${workspaceName}</span>
+<span class="separator">•</span>
+<span>Created ${formattedDate}</span>
+<span class="project-status status-${projectStatus}">${projectStatus.charAt(0).toUpperCase() + projectStatus.slice(1)}</span>
+</p>
+</div>
+</div>
+<div class="project-actions">
+<button class="btn btn-outline btn-sm">Settings</button>
+<a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
+</div>
+</div>
+<p class="project-description">${projectDescription}</p>
+<div class="project-meta">
+<div class="meta-item">
+<span class="meta-icon">📊</span>
+<span>0 Tasks</span>
+</div>
+<div class="meta-item">
+<span class="meta-icon">📝</span>
+<span>0 Documents</span>
+</div>
+<div class="meta-item">
+<span class="meta-icon">📦</span>
+<span>0 Repositories</span>
+</div>
+</div>
+<div class="project-progress">
+<div class="progress-header">
+<p class="progress-title">Overall Progress</p>
+<span class="progress-percent">0%</span>
+</div>
+<div class="progress-bar">
+<div class="progress-value" style="width: 0%;"></div>
+</div>
+</div>
+</div>`;
                     
                     // In a real app, we would store this in the database via API
-                    localStorage.setItem('newProject', projectHTML);
-                    
-                    // Log project creation details
-                    console.log('New project created:');
-                    console.log(`- Name: ${projectName}`);
-                    console.log(`- Workspace: ${workspaceName}`);
-                    console.log(`- Status: ${projectStatus}`);
-                    console.log(`- Icon: ${projectIcon}`);
-                    console.log('Project data saved to localStorage');
+                    try {
+                        // Create a simple JSON object that's more reliable for storage
+                        const projectData = {
+                            name: projectName,
+                            description: projectDescription,
+                            workspace: workspaceName,
+                            status: projectStatus,
+                            icon: projectIcon,
+                            date: formattedDate
+                        };
+                        
+                        // Store both the HTML and the data object
+                        localStorage.setItem('newProjectHTML', projectHTML);
+                        localStorage.setItem('newProjectData', JSON.stringify(projectData));
+                        
+                        // Verify the data was saved correctly
+                        console.log('New project created:');
+                        console.log(`- Name: ${projectName}`);
+                        console.log(`- Workspace: ${workspaceName}`);
+                        console.log(`- Status: ${projectStatus}`);
+                        console.log(`- Icon: ${projectIcon}`);
+                        console.log('Project data saved to localStorage');
+                    } catch (e) {
+                        console.error('Error saving to localStorage:', e);
+                    }
                     
                     // Alert user and redirect
                     alert('Project created successfully!');
