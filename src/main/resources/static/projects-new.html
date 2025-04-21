@@ -375,35 +375,58 @@
 </div>
 </div>`;
                     
-                    // In a real app, we would store this in the database via API
-                    console.log('Creating new project');
+                    // Store the project in database via API
+                    console.log('Creating new project via API');
                     
                     try {
-                        // Create a simpler approach - just use URL parameters
-                        // These basic parameters will be enough to create a new project without localStorage
-                        const params = new URLSearchParams();
-                        params.append('name', projectName);
-                        params.append('description', projectDescription);
-                        params.append('workspace', workspaceName);
-                        params.append('status', projectStatus);
-                        params.append('icon', projectIcon);
-                        params.append('date', formattedDate);
+                        // Get the workspace ID from the selected option
+                        const workspaceId = document.getElementById('project-workspace').value;
+                        if (!workspaceId) {
+                            throw new Error('Please select a workspace');
+                        }
                         
-                        // Set a cookie that will be readable by the projects page
-                        document.cookie = `newProjectName=${encodeURIComponent(projectName)}; path=/; max-age=30`;
-                        document.cookie = `projectCreated=true; path=/; max-age=30`;
+                        // Create the project data
+                        const projectData = {
+                            name: projectName,
+                            description: projectDescription,
+                            workspaceId: workspaceId,
+                            status: projectStatus.toUpperCase(),
+                            icon: projectIcon
+                        };
                         
-                        console.log('Project data prepared for redirect:');
-                        console.log('- Name:', projectName);
-                        console.log('- Workspace:', workspaceName);
-                        console.log('- Status:', projectStatus);
-                        console.log('- Cookie set:', document.cookie);
+                        console.log('Sending project data to API:', projectData);
                         
-                        // Alert user and redirect with query parameters containing all project data
-                        alert('Project "' + projectName + '" created successfully!');
-                        window.location.href = '/projects?' + params.toString();
+                        // Send project data to the API
+                        fetch('/api/projects', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(projectData)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to create project. Status: ' + response.status);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Project created successfully:', data);
+                            
+                            // Set a cookie to indicate a new project was created
+                            document.cookie = `newProjectId=${encodeURIComponent(data.id)}; path=/; max-age=30`;
+                            document.cookie = `newProjectName=${encodeURIComponent(projectName)}; path=/; max-age=30`;
+                            
+                            // Alert user and redirect
+                            alert('Project "' + projectName + '" created successfully!');
+                            window.location.href = '/projects?new=' + encodeURIComponent(projectName);
+                        })
+                        .catch(error => {
+                            console.error('Error creating project:', error);
+                            alert('Error creating project: ' + error.message);
+                        });
                     } catch (e) {
-                        console.error('Error creating project:', e);
+                        console.error('Error preparing project data:', e);
                         alert('Error creating project: ' + e.message + '\nCheck console for details.');
                     }
                 } else {

@@ -39,6 +39,9 @@ data class Project(
     @Column(name = "avatar_url")
     val avatarUrl: String? = null,
     
+    @Column(name = "icon")
+    val icon: String = "🚀",
+    
     @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true)
     val boards: MutableList<Board> = mutableListOf(),
     

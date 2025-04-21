@@ -359,14 +359,140 @@
                 projectsList.parentNode.insertBefore(testButton, projectsList);
             }
             
-            // Log all existing project elements in the projects-list
-            const existingProjects = document.querySelectorAll('.projects-list .project-card');
-            console.log(`Found ${existingProjects.length} existing projects in the list:`);
+            // Fetch projects from the API
+            console.log('Fetching projects from API...');
             
-            existingProjects.forEach((project, index) => {
-                const projectTitle = project.querySelector('.project-title')?.textContent || 'Unnamed project';
-                console.log(`Project ${index + 1}: "${projectTitle}"`);
-            });
+            // Get projects list element
+            const projectsList = document.querySelector('.projects-list');
+            if (!projectsList) {
+                console.error('Could not find projects list element');
+                return;
+            }
+            
+            // Clear existing static projects (for development, you may want to keep them)
+            projectsList.innerHTML = '';
+            
+            // Show loading indicator
+            const loadingEl = document.createElement('div');
+            loadingEl.textContent = 'Loading projects...';
+            loadingEl.style.padding = '20px';
+            loadingEl.style.textAlign = 'center';
+            projectsList.appendChild(loadingEl);
+            
+            // Fetch projects from API
+            fetch('/api/projects')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch projects. Status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(projects => {
+                    // Remove loading indicator
+                    projectsList.removeChild(loadingEl);
+                    
+                    // Log projects
+                    console.log(`Fetched ${projects.length} projects from API:`, projects);
+                    
+                    if (projects.length === 0) {
+                        const noProjectsEl = document.createElement('div');
+                        noProjectsEl.textContent = 'No projects found. Create your first project!';
+                        noProjectsEl.style.padding = '20px';
+                        noProjectsEl.style.textAlign = 'center';
+                        projectsList.appendChild(noProjectsEl);
+                        return;
+                    }
+                    
+                    // Create project cards for each project
+                    projects.forEach((project, index) => {
+                        createProjectCard(project, projectsList);
+                        console.log(`Project ${index + 1}: "${project.name}"`);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching projects:', error);
+                    
+                    // Remove loading indicator
+                    projectsList.removeChild(loadingEl);
+                    
+                    // Show error message
+                    const errorEl = document.createElement('div');
+                    errorEl.textContent = 'Failed to load projects. Error: ' + error.message;
+                    errorEl.style.padding = '20px';
+                    errorEl.style.color = 'red';
+                    errorEl.style.textAlign = 'center';
+                    projectsList.appendChild(errorEl);
+                });
+                
+            // Function to create a project card
+            function createProjectCard(project, container) {
+                const statusCapitalized = project.status.charAt(0) + project.status.slice(1).toLowerCase();
+                const createdDate = new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                const card = document.createElement('div');
+                card.className = 'project-card';
+                card.dataset.projectId = project.id;
+                
+                // Check if this is a newly created project
+                const urlParams = new URLSearchParams(window.location.search);
+                const newProjectName = urlParams.get('new');
+                if (newProjectName === project.name) {
+                    card.style.border = '2px solid #4caf50';
+                    card.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.25)';
+                }
+                
+                card.innerHTML = `
+                    <div class="project-header">
+                        <div class="project-title-section">
+                            <div class="project-icon workspace-color-1">${project.icon || '🚀'}</div>
+                            <div class="project-info">
+                                <h3 class="project-title">${project.name}</h3>
+                                <p class="project-subtitle">
+                                    <span class="project-workspace">${project.workspace ? project.workspace.name : 'No Workspace'}</span>
+                                    <span class="separator">•</span>
+                                    <span>Created ${createdDate}</span>
+                                    <span class="project-status status-${project.status.toLowerCase()}">${statusCapitalized}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="btn btn-outline btn-sm">Settings</button>
+                            <a href="/projects/${project.id}" class="btn btn-primary btn-sm">Open</a>
+                        </div>
+                    </div>
+                    
+                    <p class="project-description">
+                        ${project.description || 'No description provided.'}
+                    </p>
+                    
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">📊</span>
+                            <span>${project.tasks ? project.tasks.length : 0} Tasks</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📝</span>
+                            <span>${project.documents ? project.documents.length : 0} Documents</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">📦</span>
+                            <span>0 Repositories</span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-progress">
+                        <div class="progress-header">
+                            <p class="progress-title">Overall Progress</p>
+                            <span class="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            }
             
             // Check if we have a new project from URL parameters or cookies
             try {

@@ -25,7 +25,14 @@ class SecurityConfig(
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
-            .csrf { csrf -> csrf.disable() }
+            .csrf { csrf -> 
+                csrf.disable()
+                // Enable frame options for H2 console
+                .ignoringRequestMatchers("/h2-console/**")
+            }
+            .headers { headers ->
+                headers.frameOptions { frameOptions -> frameOptions.sameOrigin() }
+            }
             .authorizeHttpRequests { authorize ->
                 authorize
                     // Allow all static resources and paths
@@ -34,8 +41,10 @@ class SecurityConfig(
                     .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/docs/**").permitAll()
+                    .requestMatchers("/api/projects/**").permitAll() // Allow projects API for demo
+                    .requestMatchers("/h2-console/**").permitAll() // Allow H2 console
                     // Only protect secured API endpoints
-                    .requestMatchers("/api/workspaces/**", "/api/projects/**", "/api/tasks/**", 
+                    .requestMatchers("/api/workspaces/**", "/api/tasks/**", 
                                    "/api/pipelines/**", "/api/discord/**").authenticated()
             }
             .sessionManagement { session ->
