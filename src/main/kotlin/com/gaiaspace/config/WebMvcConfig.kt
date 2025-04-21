@@ -9,6 +9,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class WebMvcConfig : WebMvcConfigurer {
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        // Add specific handler for images
+        registry.addResourceHandler("/images/**")
+            .addResourceLocations("classpath:/static/images/")
+            .setCachePeriod(3600)
+            .resourceChain(true)
+            
+        // General static resources
         registry.addResourceHandler("/**")
             .addResourceLocations("classpath:/static/")
             .setCachePeriod(3600)
@@ -25,5 +32,7 @@ class WebMvcConfig : WebMvcConfigurer {
         registry.addViewController("/dashboard").setViewName("forward:/dashboard.html")
         registry.addViewController("/workspaces").setViewName("forward:/workspaces.html")
         registry.addViewController("/projects").setViewName("forward:/projects.html")
+        registry.addViewController("/projects/new").setViewName("forward:/projects-new.html")
+        registry.addViewController("/debug").setViewName("forward:/debug.html")
     }
 }
