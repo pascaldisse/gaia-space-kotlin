@@ -368,72 +368,72 @@
                 console.log(`Project ${index + 1}: "${projectTitle}"`);
             });
             
-            // Check if we have a new project from URL parameter or localStorage
+            // Check if we have a new project from URL parameters or cookies
             try {
                 console.log('Checking for new project...');
                 
                 // Get URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
-                const newProjectName = urlParams.get('new');
                 
-                if (newProjectName) {
-                    console.log('New project detected from URL parameter:', newProjectName);
+                // Function to get cookies by name
+                function getCookie(name) {
+                    const value = `; ${document.cookie}`;
+                    const parts = value.split(`; ${name}=`);
+                    if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+                    return null;
                 }
                 
-                // Check localStorage
-                const projectName = localStorage.getItem('newProject');
-                const projectDataStr = localStorage.getItem('projectData');
+                // Check various sources for project data
+                const projectName = urlParams.get('name') || getCookie('newProjectName');
+                const projectDesc = urlParams.get('description') || '';
+                const projectWorkspace = urlParams.get('workspace') || 'General';
+                const projectStatus = urlParams.get('status') || 'active';
+                const projectIcon = urlParams.get('icon') || '🚀';
+                const projectDate = urlParams.get('date') || 'today';
+                const projectCreated = getCookie('projectCreated') === 'true';
                 
-                console.log('localStorage check:');
-                console.log('- Project name:', projectName || 'Not found');
-                console.log('- Project data:', projectDataStr ? 'Found (length: ' + projectDataStr.length + ')' : 'Not found');
+                console.log('Project creation check:');
+                console.log('- Name from parameters:', projectName || 'Not found');
+                console.log('- Created cookie:', projectCreated);
+                console.log('- URL params:', window.location.search);
+                console.log('- Cookies:', document.cookie);
                 
-                // Create a notice about the new project
-                if (newProjectName || projectName) {
+                // If we have a new project from any source
+                if (projectName) {
+                    console.log('New project detected. Creating project card...');
+                    
+                    // Create a notice about the new project
                     const projectsList = document.querySelector('.projects-list');
                     if (projectsList) {
+                        // Add success notification
                         const notice = document.createElement('div');
                         notice.style.padding = '10px';
                         notice.style.marginBottom = '20px';
                         notice.style.backgroundColor = '#4caf50';
                         notice.style.color = 'white';
                         notice.style.borderRadius = '4px';
-                        notice.textContent = `New project "${newProjectName || projectName}" was created successfully!`;
+                        notice.style.fontWeight = 'bold';
+                        notice.textContent = `✅ Project "${projectName}" was created successfully!`;
                         projectsList.parentNode.insertBefore(notice, projectsList);
-                    }
-                }
-                
-                // Try to create the new project card
-                if (projectDataStr) {
-                    try {
-                        // Parse the project data
-                        const projectData = JSON.parse(projectDataStr);
-                        console.log('Project data parsed successfully:', projectData);
                         
-                        // Insert the new project at the beginning of the projects list
-                        const projectsList = document.querySelector('.projects-list');
-                        if (!projectsList) {
-                            console.error('Could not find .projects-list element');
-                            return;
-                        }
+                        // Create the new project card
+                        const statusCapitalized = projectStatus.charAt(0).toUpperCase() + projectStatus.slice(1);
                         
-                        // Create HTML for the new project
-                        const statusCapitalized = projectData.status.charAt(0).toUpperCase() + projectData.status.slice(1);
-                        
-                        // Create a simplified HTML string to reduce potential issues
                         const newProject = document.createElement('div');
                         newProject.className = 'project-card';
+                        newProject.style.border = '2px solid #4caf50';
+                        newProject.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.25)';
                         newProject.innerHTML = `
                             <div class="project-header">
                                 <div class="project-title-section">
-                                    <div class="project-icon workspace-color-1">${projectData.icon}</div>
+                                    <div class="project-icon workspace-color-1">${projectIcon}</div>
                                     <div class="project-info">
-                                        <h3 class="project-title">${projectData.name}</h3>
+                                        <h3 class="project-title">${projectName}</h3>
                                         <p class="project-subtitle">
-                                            <span class="project-workspace">${projectData.workspace}</span>
+                                            <span class="project-workspace">${projectWorkspace}</span>
                                             <span class="separator">•</span>
-                                            <span>Created ${projectData.date}</span>
-                                            <span class="project-status status-${projectData.status}">${statusCapitalized}</span>
+                                            <span>Created ${projectDate}</span>
+                                            <span class="project-status status-${projectStatus}">${statusCapitalized}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -442,7 +442,7 @@
                                     <a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
                                 </div>
                             </div>
-                            <p class="project-description">${projectData.description}</p>
+                            <p class="project-description">${projectDesc}</p>
                             <div class="project-meta">
                                 <div class="meta-item">
                                     <span class="meta-icon">📊</span>
@@ -471,57 +471,23 @@
                         // Insert at the beginning
                         console.log('Inserting new project into DOM');
                         projectsList.insertBefore(newProject, projectsList.firstChild);
-                        console.log('New project inserted into DOM');
-                        
-                        // Log success
-                        console.log(`New project added to DOM: "${projectData.name}"`);
+                        console.log('Project card inserted successfully!');
                         
                         // Update the count display
                         const projectCount = document.createElement('div');
                         projectCount.style.marginBottom = '10px';
-                        projectCount.textContent = `Project count: ${document.querySelectorAll('.project-card').length}`;
+                        projectCount.textContent = `Total projects: ${document.querySelectorAll('.project-card').length}`;
                         projectsList.parentNode.insertBefore(projectCount, projectsList);
                         
-                        // Clean up localStorage
-                        localStorage.removeItem('newProject');
-                        localStorage.removeItem('projectData');
-                        console.log('Project data cleared from localStorage');
-                    } catch (parseErr) {
-                        console.error('Error creating new project from data:', parseErr);
+                        // Clean up cookies
+                        document.cookie = 'newProjectName=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                        document.cookie = 'projectCreated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                        console.log('Cookies cleared');
+                    } else {
+                        console.error('Could not find projects list element');
                     }
-                } else if (newProjectName) {
-                    console.log('No project data found in localStorage, but URL parameter detected');
-                    // Create a simplified version based on just the name
-                    const projectsList = document.querySelector('.projects-list');
-                    if (projectsList) {
-                        const newProject = document.createElement('div');
-                        newProject.className = 'project-card';
-                        newProject.innerHTML = `
-                            <div class="project-header">
-                                <div class="project-title-section">
-                                    <div class="project-icon workspace-color-1">🚀</div>
-                                    <div class="project-info">
-                                        <h3 class="project-title">${newProjectName}</h3>
-                                        <p class="project-subtitle">
-                                            <span class="project-workspace">General</span>
-                                            <span class="separator">•</span>
-                                            <span>Created today</span>
-                                            <span class="project-status status-active">Active</span>
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="project-actions">
-                                    <button class="btn btn-outline btn-sm">Settings</button>
-                                    <a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
-                                </div>
-                            </div>
-                            <p class="project-description">Project created from URL parameter.</p>
-                        `;
-                        
-                        // Insert at the beginning
-                        projectsList.insertBefore(newProject, projectsList.firstChild);
-                        console.log('Fallback project inserted into DOM based on URL parameter');
-                    }
+                } else {
+                    console.log('No new project detected');
                 }
             } catch (e) {
                 console.error('Error handling new project:', e);

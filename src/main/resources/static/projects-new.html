@@ -376,50 +376,35 @@
 </div>`;
                     
                     // In a real app, we would store this in the database via API
-                    console.log('Creating new project and preparing to save to localStorage');
+                    console.log('Creating new project');
                     
                     try {
-                        // Create a simpler JSON object
-                        const projectData = {
-                            name: projectName,
-                            description: projectDescription,
-                            workspace: workspaceName,
-                            status: projectStatus,
-                            icon: projectIcon,
-                            date: formattedDate,
-                            created: new Date().toISOString()
-                        };
+                        // Create a simpler approach - just use URL parameters
+                        // These basic parameters will be enough to create a new project without localStorage
+                        const params = new URLSearchParams();
+                        params.append('name', projectName);
+                        params.append('description', projectDescription);
+                        params.append('workspace', workspaceName);
+                        params.append('status', projectStatus);
+                        params.append('icon', projectIcon);
+                        params.append('date', formattedDate);
                         
-                        // Store the data as a string to avoid JSON parsing issues
-                        const projectDataString = JSON.stringify(projectData);
+                        // Set a cookie that will be readable by the projects page
+                        document.cookie = `newProjectName=${encodeURIComponent(projectName)}; path=/; max-age=30`;
+                        document.cookie = `projectCreated=true; path=/; max-age=30`;
                         
-                        // Log before saving
-                        console.log('Saving project data to localStorage:');
-                        console.log('Data string length:', projectDataString.length);
-                        console.log('Project data:', projectData);
+                        console.log('Project data prepared for redirect:');
+                        console.log('- Name:', projectName);
+                        console.log('- Workspace:', workspaceName);
+                        console.log('- Status:', projectStatus);
+                        console.log('- Cookie set:', document.cookie);
                         
-                        // Try to save to localStorage
-                        localStorage.clear(); // Clear any old data first
-                        localStorage.setItem('newProject', projectName); // Simple string first
-                        localStorage.setItem('projectData', projectDataString); // Then the full data
-                        
-                        // Verify it was saved correctly
-                        const savedProject = localStorage.getItem('newProject');
-                        const savedData = localStorage.getItem('projectData');
-                        
-                        console.log('Verification - Project name in localStorage:', savedProject);
-                        console.log('Verification - Project data retrieved:', savedData ? 'Yes (length: ' + savedData.length + ')' : 'No');
-                        
-                        if (!savedProject || !savedData) {
-                            throw new Error('Failed to save to localStorage');
-                        }
-                        
-                        // Alert user and redirect with a query parameter
+                        // Alert user and redirect with query parameters containing all project data
                         alert('Project "' + projectName + '" created successfully!');
-                        window.location.href = '/projects?new=' + encodeURIComponent(projectName);
+                        window.location.href = '/projects?' + params.toString();
                     } catch (e) {
-                        console.error('Error saving to localStorage:', e);
-                        alert('Error saving project: ' + e.message + '\nCheck console for details.');
+                        console.error('Error creating project:', e);
+                        alert('Error creating project: ' + e.message + '\nCheck console for details.');
                     }
                 } else {
                     projectForm.reportValidity();
