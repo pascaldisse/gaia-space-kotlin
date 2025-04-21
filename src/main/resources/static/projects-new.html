@@ -181,10 +181,7 @@
                         <label for="project-workspace" class="form-label required">Workspace</label>
                         <select id="project-workspace" name="workspaceId" class="form-control" required>
                             <option value="" disabled selected>Select a workspace</option>
-                            <option value="1">Engineering</option>
-                            <option value="2">Design</option>
-                            <option value="3">Marketing</option>
-                            <option value="4">Product</option>
+                            <!-- Workspaces will be loaded from API -->
                         </select>
                     </div>
                     
@@ -252,6 +249,73 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Load workspaces from API
+            const workspaceSelect = document.getElementById('project-workspace');
+            if (workspaceSelect) {
+                // Add loading option
+                const loadingOption = document.createElement('option');
+                loadingOption.textContent = 'Loading workspaces...';
+                loadingOption.disabled = true;
+                workspaceSelect.innerHTML = '';
+                workspaceSelect.appendChild(loadingOption);
+                
+                // Fetch workspaces from API
+                fetch('/api/public/workspaces')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch workspaces');
+                        }
+                        return response.json();
+                    })
+                    .then(workspaces => {
+                        // Clear options
+                        workspaceSelect.innerHTML = '';
+                        
+                        // Add default option
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = '';
+                        defaultOption.textContent = 'Select a workspace';
+                        defaultOption.disabled = true;
+                        defaultOption.selected = true;
+                        workspaceSelect.appendChild(defaultOption);
+                        
+                        // Add workspace options
+                        if (workspaces.length === 0) {
+                            const noWorkspacesOption = document.createElement('option');
+                            noWorkspacesOption.value = '';
+                            noWorkspacesOption.textContent = 'No workspaces available';
+                            noWorkspacesOption.disabled = true;
+                            workspaceSelect.appendChild(noWorkspacesOption);
+                        } else {
+                            workspaces.forEach(workspace => {
+                                const option = document.createElement('option');
+                                option.value = workspace.id;
+                                option.textContent = workspace.name;
+                                workspaceSelect.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching workspaces:', error);
+                        workspaceSelect.innerHTML = '';
+                        
+                        // Add error option
+                        const errorOption = document.createElement('option');
+                        errorOption.value = '';
+                        errorOption.textContent = 'Error loading workspaces';
+                        errorOption.disabled = true;
+                        errorOption.selected = true;
+                        workspaceSelect.appendChild(errorOption);
+                        
+                        // Add some default options for testing
+                        ['Engineering', 'Design', 'Marketing', 'Product'].forEach((name, index) => {
+                            const option = document.createElement('option');
+                            option.value = (index + 1).toString();
+                            option.textContent = name;
+                            workspaceSelect.appendChild(option);
+                        });
+                    });
+            }
             // Add event listener for the test storage button
             const testStorageBtn = document.getElementById('test-storage-btn');
             if (testStorageBtn) {

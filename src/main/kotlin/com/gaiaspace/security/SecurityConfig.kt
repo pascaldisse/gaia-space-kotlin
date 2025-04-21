@@ -39,6 +39,7 @@ class SecurityConfig(
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/docs/**").permitAll()
                     .requestMatchers("/api/projects/**").permitAll() // Allow projects API for demo
+                    .requestMatchers("/api/public/**").permitAll() // Public API endpoints
                     .requestMatchers("/h2-console/**").permitAll() // Allow H2 console
                     // Only protect secured API endpoints
                     .requestMatchers("/api/workspaces/**", "/api/tasks/**", 

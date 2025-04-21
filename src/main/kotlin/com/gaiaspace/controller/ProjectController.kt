@@ -24,7 +24,7 @@ class ProjectViewController {
 data class CreateProjectRequest(
     val name: String,
     val description: String? = null,
-    val workspaceId: String,
+    val workspaceId: String? = null,
     val status: String = "ACTIVE",
     val icon: String = "🚀"
 )
@@ -42,28 +42,44 @@ class ProjectApiController(
     }
     
     @PostMapping
-    fun createProject(@RequestBody request: CreateProjectRequest): ResponseEntity<Project> {
-        val workspace = workspaceRepository.findById(request.workspaceId)
-            .orElseThrow { IllegalArgumentException("Workspace not found") }
-        
-        val status = try {
-            ProjectStatus.valueOf(request.status.uppercase())
-        } catch (e: IllegalArgumentException) {
-            ProjectStatus.ACTIVE
+    fun createProject(@RequestBody request: CreateProjectRequest): ResponseEntity<Any> {
+        return try {
+            // If no workspaces available, create a default one
+            val workspace = if (request.workspaceId.isNullOrBlank()) {
+                // Return an error message for now, as we don't want to auto-create workspaces
+                // In a real app, you'd provide a better error message or UI to create a workspace
+                return ResponseEntity.badRequest().body(mapOf("error" to "Please select a workspace"))
+            } else {
+                workspaceRepository.findById(request.workspaceId)
+                    .orElseThrow { IllegalArgumentException("Workspace not found") }
+            }
+            
+            val status = try {
+                ProjectStatus.valueOf(request.status.uppercase())
+            } catch (e: IllegalArgumentException) {
+                ProjectStatus.ACTIVE
+            }
+            
+            val project = Project(
+                name = request.name,
+                description = request.description,
+                workspace = workspace,
+                createdBy = "system", // In a real app, this would be the current user ID
+                status = status,
+                icon = request.icon,
+                createdAt = LocalDateTime.now()
+            )
+            
+            val savedProject = projectRepository.save(project)
+            ResponseEntity.ok(savedProject)
+        } catch (e: Exception) {
+            // Log the error
+            println("Error creating project: ${e.message}")
+            e.printStackTrace()
+            
+            // Return a meaningful error message
+            ResponseEntity.badRequest().body(mapOf("error" to "Failed to create project: ${e.message}"))
         }
-        
-        val project = Project(
-            name = request.name,
-            description = request.description,
-            workspace = workspace,
-            createdBy = "system", // In a real app, this would be the current user ID
-            status = status,
-            icon = request.icon,
-            createdAt = LocalDateTime.now()
-        )
-        
-        val savedProject = projectRepository.save(project)
-        return ResponseEntity.ok(savedProject)
     }
     
     @GetMapping("/{id}")
