@@ -132,7 +132,7 @@ small {
 }
 
 .nav-links a {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   padding: 0 var(--space-md);
   height: 56px;
   display: flex;
