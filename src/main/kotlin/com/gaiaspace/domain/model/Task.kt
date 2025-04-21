@@ -12,10 +12,10 @@ data class Task(
     val id: String = "",
     
     @Column(nullable = false)
-    val title: String,
+    var title: String,
     
     @Column(columnDefinition = "TEXT")
-    val description: String? = null,
+    var description: String? = null,
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
@@ -23,7 +23,7 @@ data class Task(
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
-    val assignee: User? = null,
+    var assignee: User? = null,
     
     @Column(name = "created_by", nullable = false)
     val createdBy: String,
@@ -32,24 +32,24 @@ data class Task(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     
     @Column(name = "updated_at")
-    val updatedAt: LocalDateTime? = null,
+    var updatedAt: LocalDateTime? = null,
     
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    val status: TaskStatus = TaskStatus.TODO,
+    var status: TaskStatus = TaskStatus.TODO,
     
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    val priority: TaskPriority = TaskPriority.MEDIUM,
+    var priority: TaskPriority = TaskPriority.MEDIUM,
     
     @Column(name = "due_date")
-    val dueDate: LocalDate? = null,
+    var dueDate: LocalDate? = null,
     
     @Column(name = "estimated_hours")
-    val estimatedHours: Float? = null,
+    var estimatedHours: Float? = null,
     
     @Column(name = "spent_hours")
-    val spentHours: Float? = null,
+    var spentHours: Float? = null,
     
     @OneToMany(mappedBy = "dependentTask", cascade = [CascadeType.ALL], orphanRemoval = true)
     val dependencies: MutableList<TaskDependency> = mutableListOf(),

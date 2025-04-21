@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
-import java.util.List
 
 @Repository
 interface TaskRepository : JpaRepository<Task, String> {
@@ -40,4 +39,12 @@ interface TaskRepository : JpaRepository<Task, String> {
         WHERE tag.id = :tagId
     """)
     fun findByTagId(@Param("tagId") tagId: String): List<Task>
+    
+    fun countByProjectId(projectId: String): Long
+    
+    fun countByProjectIdAndStatus(projectId: String, status: TaskStatus): Long
+    
+    fun countByAssigneeId(userId: String): Long
+    
+    fun countByAssigneeIdAndStatus(userId: String, status: TaskStatus): Long
 }
