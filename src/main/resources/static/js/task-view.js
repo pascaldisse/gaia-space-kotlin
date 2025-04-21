@@ -55,63 +55,80 @@ function setupEventListeners() {
     const listViewBtn = document.getElementById('list-view');
     const gridViewBtn = document.getElementById('grid-view');
     const kanbanViewBtn = document.getElementById('kanban-view');
+    const headerKanbanViewBtn = document.getElementById('header-kanban-view');
     const taskList = document.getElementById('task-list');
     const kanbanBoard = document.getElementById('kanban-board');
     
-    if (listViewBtn && gridViewBtn && kanbanViewBtn && taskList && kanbanBoard) {
-        // List view
-        listViewBtn.addEventListener('click', function() {
-            // Show task list, hide kanban
-            taskList.style.display = 'block';
-            taskList.classList.remove('grid-view');
-            kanbanBoard.style.display = 'none';
-            
-            // Update buttons
-            listViewBtn.classList.add('active');
-            gridViewBtn.classList.remove('active');
-            kanbanViewBtn.classList.remove('active');
-            
-            // Show notification
-            showNotification('Switched to list view', 'info');
-        });
-        
-        // Grid view
-        gridViewBtn.addEventListener('click', function() {
-            // Show task list in grid view, hide kanban
-            taskList.style.display = 'block';
-            taskList.classList.add('grid-view');
-            kanbanBoard.style.display = 'none';
-            
-            // Update buttons
-            gridViewBtn.classList.add('active');
-            listViewBtn.classList.remove('active');
-            kanbanViewBtn.classList.remove('active');
-            
-            // Show notification
-            showNotification('Switched to grid view', 'info');
-        });
-        
-        // Kanban view
-        kanbanViewBtn.addEventListener('click', function() {
+    if (taskList && kanbanBoard) {
+        // Function to switch to kanban view
+        const switchToKanbanView = function() {
             // Hide task list, show kanban
             taskList.style.display = 'none';
             kanbanBoard.style.display = 'flex';
             
-            // Update buttons
-            kanbanViewBtn.classList.add('active');
-            listViewBtn.classList.remove('active');
-            gridViewBtn.classList.remove('active');
+            // Update view toggle buttons if they exist
+            if (listViewBtn && gridViewBtn && kanbanViewBtn) {
+                kanbanViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                gridViewBtn.classList.remove('active');
+            }
             
             // Initialize kanban board
             initializeKanbanBoard();
             
             // Show notification
             showNotification('Switched to kanban view', 'info');
-        });
+        };
+        
+        // List view button
+        if (listViewBtn) {
+            listViewBtn.addEventListener('click', function() {
+                // Show task list, hide kanban
+                taskList.style.display = 'block';
+                taskList.classList.remove('grid-view');
+                kanbanBoard.style.display = 'none';
+                
+                // Update buttons
+                listViewBtn.classList.add('active');
+                gridViewBtn.classList.remove('active');
+                kanbanViewBtn.classList.remove('active');
+                
+                // Show notification
+                showNotification('Switched to list view', 'info');
+            });
+        }
+        
+        // Grid view button
+        if (gridViewBtn) {
+            gridViewBtn.addEventListener('click', function() {
+                // Show task list in grid view, hide kanban
+                taskList.style.display = 'block';
+                taskList.classList.add('grid-view');
+                kanbanBoard.style.display = 'none';
+                
+                // Update buttons
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                kanbanViewBtn.classList.remove('active');
+                
+                // Show notification
+                showNotification('Switched to grid view', 'info');
+            });
+        }
+        
+        // Kanban view from toggle buttons
+        if (kanbanViewBtn) {
+            kanbanViewBtn.addEventListener('click', switchToKanbanView);
+        }
+        
+        // Kanban view from header button
+        if (headerKanbanViewBtn) {
+            headerKanbanViewBtn.addEventListener('click', switchToKanbanView);
+        }
     }
     
     // Task Filtering
-    const filterBtn = document.querySelector('.card-actions .btn-outline');
+    const filterBtn = document.querySelector('.card-actions .btn-outline:first-child');
     const taskFilters = document.getElementById('task-filters');
     const clearFiltersBtn = document.getElementById('clear-filters');
     const applyFiltersBtn = document.getElementById('apply-filters');
