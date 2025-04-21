@@ -51,22 +51,62 @@ function initializeTasks() {
 }
 
 function setupEventListeners() {
-    // Task View Switching (List/Grid)
+    // Task View Switching (List/Grid/Kanban)
     const listViewBtn = document.getElementById('list-view');
     const gridViewBtn = document.getElementById('grid-view');
+    const kanbanViewBtn = document.getElementById('kanban-view');
     const taskList = document.getElementById('task-list');
+    const kanbanBoard = document.getElementById('kanban-board');
     
-    if (listViewBtn && gridViewBtn && taskList) {
+    if (listViewBtn && gridViewBtn && kanbanViewBtn && taskList && kanbanBoard) {
+        // List view
         listViewBtn.addEventListener('click', function() {
+            // Show task list, hide kanban
+            taskList.style.display = 'block';
             taskList.classList.remove('grid-view');
+            kanbanBoard.style.display = 'none';
+            
+            // Update buttons
             listViewBtn.classList.add('active');
             gridViewBtn.classList.remove('active');
+            kanbanViewBtn.classList.remove('active');
+            
+            // Show notification
+            showNotification('Switched to list view', 'info');
         });
         
+        // Grid view
         gridViewBtn.addEventListener('click', function() {
+            // Show task list in grid view, hide kanban
+            taskList.style.display = 'block';
             taskList.classList.add('grid-view');
+            kanbanBoard.style.display = 'none';
+            
+            // Update buttons
             gridViewBtn.classList.add('active');
             listViewBtn.classList.remove('active');
+            kanbanViewBtn.classList.remove('active');
+            
+            // Show notification
+            showNotification('Switched to grid view', 'info');
+        });
+        
+        // Kanban view
+        kanbanViewBtn.addEventListener('click', function() {
+            // Hide task list, show kanban
+            taskList.style.display = 'none';
+            kanbanBoard.style.display = 'flex';
+            
+            // Update buttons
+            kanbanViewBtn.classList.add('active');
+            listViewBtn.classList.remove('active');
+            gridViewBtn.classList.remove('active');
+            
+            // Initialize kanban board
+            initializeKanbanBoard();
+            
+            // Show notification
+            showNotification('Switched to kanban view', 'info');
         });
     }
     
@@ -253,13 +293,13 @@ function updateTaskCounts() {
         totalElement.textContent = allTasks.length;
     }
     
-    // Count open
-    const openTasks = Array.from(allTasks).filter(task => 
-        task.getAttribute('data-status') === 'open').length;
+    // Count todo tasks
+    const todoTasks = Array.from(allTasks).filter(task => 
+        task.getAttribute('data-status') === 'todo').length;
     
-    const openElement = document.querySelector('.stat-value:nth-of-type(2)');
-    if (openElement) {
-        openElement.textContent = openTasks;
+    const todoElement = document.querySelector('.stat-value:nth-of-type(2)');
+    if (todoElement) {
+        todoElement.textContent = todoTasks;
     }
     
     // Count in-progress
@@ -271,13 +311,22 @@ function updateTaskCounts() {
         inProgressElement.textContent = inProgressTasks;
     }
     
-    // Count completed
-    const completedTasks = Array.from(allTasks).filter(task => 
-        task.getAttribute('data-status') === 'completed').length;
+    // Count done
+    const doneTasks = Array.from(allTasks).filter(task => 
+        task.getAttribute('data-status') === 'done').length;
     
-    const completedElement = document.querySelector('.stat-value:nth-of-type(4)');
-    if (completedElement) {
-        completedElement.textContent = completedTasks;
+    const doneElement = document.querySelector('.stat-value:nth-of-type(4)');
+    if (doneElement) {
+        doneElement.textContent = doneTasks;
+    }
+    
+    // Count backlog
+    const backlogTasks = Array.from(allTasks).filter(task => 
+        task.getAttribute('data-status') === 'backlog').length;
+    
+    const backlogElement = document.querySelector('.stat-value:nth-of-type(5)');
+    if (backlogElement) {
+        backlogElement.textContent = backlogTasks;
     }
 }
 
@@ -422,6 +471,12 @@ function setupEditModal() {
             
             // Update task counts
             updateTaskCounts();
+            
+            // If kanban view is active, update the kanban board
+            const kanbanViewBtn = document.getElementById('kanban-view');
+            if (kanbanViewBtn && kanbanViewBtn.classList.contains('active')) {
+                initializeKanbanBoard();
+            }
         });
     }
 }
@@ -467,4 +522,109 @@ function openEditModal(taskItem) {
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// Kanban Board Functions
+function initializeKanbanBoard() {
+    // Clear existing tasks from kanban columns
+    document.querySelectorAll('.kanban-tasks').forEach(column => {
+        column.innerHTML = '';
+    });
+    
+    // Reset task counts
+    document.querySelectorAll('.kanban-column .task-count').forEach(count => {
+        count.textContent = '0';
+    });
+    
+    // Get all tasks from the task list
+    const tasks = document.querySelectorAll('.task-item');
+    
+    // Group tasks by status
+    const tasksByStatus = {
+        'todo': [],
+        'in-progress': [],
+        'done': [],
+        'backlog': []
+    };
+    
+    // Process each task and group by status
+    tasks.forEach(task => {
+        // Get task data
+        const status = task.getAttribute('data-status') || 'todo';
+        const taskId = task.id;
+        const title = task.querySelector('.task-title').textContent;
+        const description = task.querySelector('.task-description')?.textContent || '';
+        const priority = task.getAttribute('data-priority') || 'medium';
+        const projectEl = task.querySelector('.task-project');
+        const project = projectEl ? projectEl.textContent : '';
+        
+        // Add task to appropriate group
+        if (status === 'completed') {
+            // Map "completed" to "done" for kanban
+            tasksByStatus['done'].push({ taskId, title, description, priority, project });
+        } else if (tasksByStatus[status]) {
+            // Add to mapped status if it exists
+            tasksByStatus[status].push({ taskId, title, description, priority, project });
+        } else {
+            // Default to todo if status is unknown
+            tasksByStatus['todo'].push({ taskId, title, description, priority, project });
+        }
+    });
+    
+    // Render tasks in each column
+    for (const [status, statusTasks] of Object.entries(tasksByStatus)) {
+        const columnEl = document.getElementById(`kanban-${status}`);
+        if (columnEl) {
+            // Update task count
+            const countEl = columnEl.closest('.kanban-column').querySelector('.task-count');
+            if (countEl) {
+                countEl.textContent = statusTasks.length;
+            }
+            
+            // Render tasks
+            statusTasks.forEach(task => {
+                const taskCard = createKanbanCard(task, status);
+                columnEl.appendChild(taskCard);
+            });
+        }
+    }
+    
+    // Setup drag and drop (for future implementation)
+    setupKanbanDragAndDrop();
+}
+
+function createKanbanCard(task, status) {
+    // Create card element
+    const card = document.createElement('div');
+    card.className = 'kanban-card';
+    card.setAttribute('data-task-id', task.taskId);
+    card.setAttribute('data-status', status);
+    
+    // Create card content
+    const cardContent = `
+        <h4>${task.title}</h4>
+        <div class="kanban-card-description">${task.description}</div>
+        <div class="kanban-card-meta">
+            <span class="kanban-project">${task.project}</span>
+            <span class="kanban-priority ${task.priority}">${capitalizeFirstLetter(task.priority)}</span>
+        </div>
+    `;
+    
+    card.innerHTML = cardContent;
+    
+    // Add click handler to open task details
+    card.addEventListener('click', function() {
+        const originalTask = document.getElementById(task.taskId);
+        if (originalTask) {
+            openEditModal(originalTask);
+        }
+    });
+    
+    return card;
+}
+
+function setupKanbanDragAndDrop() {
+    // This function can be expanded in the future to implement drag and drop
+    // between kanban columns. For now, it's a placeholder.
+    console.log('Kanban drag and drop functionality will be implemented in a future update');
 }
