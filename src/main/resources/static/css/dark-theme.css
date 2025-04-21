@@ -6,7 +6,7 @@
   /* Colors */
   --bg-dark: #1E1F22;
   --bg-medium: #2B2D31;
-  --bg-light: #313338;
+  --bg-light: #2B2D31; /* Darkened from #313338 */
   --accent-blue: #5865F2;
   --accent-green: #23A559;
   --accent-red: #F23F42;
@@ -221,7 +221,7 @@ small {
 
 /* Cards */
 .card {
-  background-color: var(--bg-light);
+  background-color: var(--bg-medium);
   border-radius: 8px;
   border: 1px solid var(--border-primary);
   box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.1);
@@ -394,7 +394,7 @@ select.form-control {
 }
 
 .task-item {
-  background-color: var(--bg-light);
+  background-color: var(--bg-medium);
   border: 1px solid var(--border-primary);
   border-radius: 4px;
   padding: var(--space-md);
@@ -513,7 +513,7 @@ select.form-control {
 
 /* Task Filters */
 #task-filters {
-  background-color: var(--bg-light);
+  background-color: var(--bg-medium);
   border: 1px solid var(--border-primary);
   border-radius: 8px;
   padding: var(--space-md);
@@ -544,7 +544,7 @@ select.form-control {
 }
 
 .stat-card {
-  background-color: var(--bg-light);
+  background-color: var(--bg-medium);
   border-radius: 4px;
   padding: var(--space-sm);
   text-align: center;
@@ -564,7 +564,7 @@ select.form-control {
 
 /* Quick Add Form */
 .quick-form {
-  background-color: var(--bg-light);
+  background-color: var(--bg-medium);
   border: 1px solid var(--border-primary);
   border-radius: 8px;
   padding: var(--space-md);
@@ -584,11 +584,12 @@ select.form-control {
 }
 
 .modal-content {
-  background-color: var(--bg-medium);
+  background-color: var(--bg-dark);
   margin: 10% auto;
   width: 500px;
   max-width: 90%;
   border-radius: 8px;
+  border: 1px solid var(--border-primary);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
   animation: modalFadeIn 0.3s;
 }
@@ -752,7 +753,7 @@ select.form-control {
   flex: 1;
   max-width: 300px;
   padding: var(--space-md);
-  background-color: var(--bg-light);
+  background-color: var(--bg-medium);
   border-left: 1px solid var(--border-primary);
   overflow-y: auto;
 }
@@ -803,7 +804,7 @@ select.form-control {
 /* Additional Components (can be expanded as needed) */
 /* Project Cards */
 .project-card {
-  background-color: var(--bg-light);
+  background-color: var(--bg-medium);
   border-radius: 8px;
   border: 1px solid var(--border-primary);
   padding: var(--space-md);

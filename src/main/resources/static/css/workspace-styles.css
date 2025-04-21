@@ -1,6 +1,6 @@
 /* Workspace-specific styles */
 .workspace-card {
-    background-color: var(--bg-light);
+    background-color: var(--bg-medium);
     border-radius: 8px;
     border: 1px solid var(--border-primary);
     box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.1);
