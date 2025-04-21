@@ -191,7 +191,6 @@ function setupEventListeners() {
             e.stopPropagation();
             const taskItem = this.closest('.task-item');
             if (!this.getAttribute('href')) {
-                console.log('Opening edit modal for:', taskItem.querySelector('.task-title').textContent);
                 openEditModal(taskItem);
             }
         });
@@ -482,10 +481,8 @@ function setupEditModal() {
 }
 
 function openEditModal(taskItem) {
-    console.log('Opening modal for task:', taskItem);
     const modal = document.getElementById('edit-task-modal');
     if (!modal) {
-        console.error('Modal element not found');
         return;
     }
     
@@ -496,8 +493,6 @@ function openEditModal(taskItem) {
     const priority = taskItem.getAttribute('data-priority') || 'medium';
     const project = taskItem.getAttribute('data-project') || '1';
     const status = taskItem.getAttribute('data-status') || 'open';
-    
-    console.log('Task data:', { taskId, title, description, priority, project, status });
     
     // Populate the form
     document.getElementById('edit-task-id').value = taskId;
@@ -516,7 +511,6 @@ function openEditModal(taskItem) {
     // Display the modal with delay to ensure DOM is ready
     setTimeout(() => {
         modal.style.display = 'block';
-        console.log('Modal displayed');
     }, 50);
 }
 
@@ -626,5 +620,4 @@ function createKanbanCard(task, status) {
 function setupKanbanDragAndDrop() {
     // This function can be expanded in the future to implement drag and drop
     // between kanban columns. For now, it's a placeholder.
-    console.log('Kanban drag and drop functionality will be implemented in a future update');
 }
