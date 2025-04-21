@@ -139,12 +139,19 @@ function setupEventListeners() {
         });
     });
     
-    // Task Edit Buttons
-    const editBtns = document.querySelectorAll('.task-actions .btn');
-    editBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+    // Task Edit Buttons - make sure this is applied to ALL buttons
+    document.querySelectorAll('.task-actions .btn').forEach(btn => {
+        // Remove any existing event listeners first
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        // Add the click event listener
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             const taskItem = this.closest('.task-item');
             if (!this.getAttribute('href')) {
+                console.log('Opening edit modal for:', taskItem.querySelector('.task-title').textContent);
                 openEditModal(taskItem);
             }
         });
@@ -420,27 +427,42 @@ function setupEditModal() {
 }
 
 function openEditModal(taskItem) {
+    console.log('Opening modal for task:', taskItem);
     const modal = document.getElementById('edit-task-modal');
-    if (!modal) return;
+    if (!modal) {
+        console.error('Modal element not found');
+        return;
+    }
     
     // Extract task data
     const taskId = taskItem.id;
     const title = taskItem.querySelector('.task-title').textContent;
-    const description = taskItem.querySelector('.task-description').textContent;
+    const description = taskItem.querySelector('.task-description')?.textContent || '';
     const priority = taskItem.getAttribute('data-priority') || 'medium';
     const project = taskItem.getAttribute('data-project') || '1';
     const status = taskItem.getAttribute('data-status') || 'open';
+    
+    console.log('Task data:', { taskId, title, description, priority, project, status });
     
     // Populate the form
     document.getElementById('edit-task-id').value = taskId;
     document.getElementById('edit-task-title').value = title;
     document.getElementById('edit-task-description').value = description;
-    document.getElementById('edit-task-priority').value = priority;
-    document.getElementById('edit-task-project').value = project;
-    document.getElementById('edit-task-status').value = status;
     
-    // Display the modal
-    modal.style.display = 'block';
+    // Set the select elements
+    const prioritySelect = document.getElementById('edit-task-priority');
+    const projectSelect = document.getElementById('edit-task-project');
+    const statusSelect = document.getElementById('edit-task-status');
+    
+    if (prioritySelect) prioritySelect.value = priority;
+    if (projectSelect) projectSelect.value = project;
+    if (statusSelect) statusSelect.value = status;
+    
+    // Display the modal with delay to ensure DOM is ready
+    setTimeout(() => {
+        modal.style.display = 'block';
+        console.log('Modal displayed');
+    }, 50);
 }
 
 function capitalizeFirstLetter(string) {
