@@ -219,22 +219,23 @@ small {
   color: var(--text-secondary);
 }
 
-/* Cards */
-.card {
+/* Cards - Unified Style */
+.card, .workspace-card, .project-card, .task-item {
   background-color: var(--bg-medium);
   border-radius: 8px;
   border: 1px solid var(--border-primary);
   box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: box-shadow var(--transition-speed) var(--transition-easing);
+  transition: all var(--transition-speed) var(--transition-easing);
   margin-bottom: var(--space-lg);
 }
 
-.card:hover {
+.card:hover, .workspace-card:hover, .project-card:hover, .task-item:hover {
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
 }
 
-.card-header {
+.card-header, .workspace-header, .project-header {
   padding: var(--space-md);
   border-bottom: 1px solid var(--border-primary);
   display: flex;
@@ -242,23 +243,23 @@ small {
   justify-content: space-between;
 }
 
-.card-title {
+.card-title, .workspace-title, .project-title {
   margin: 0;
   font-size: var(--font-size-h3);
   color: var(--text-primary);
 }
 
-.card-subtitle {
+.card-subtitle, .project-subtitle {
   font-size: var(--font-size-small);
   color: var(--text-secondary);
   margin-top: var(--space-xs);
 }
 
-.card-body {
+.card-body, .workspace-content, .project-body {
   padding: var(--space-md);
 }
 
-.card-footer {
+.card-footer, .workspace-footer, .project-footer {
   padding: var(--space-md);
   border-top: 1px solid var(--border-primary);
   display: flex;
@@ -394,21 +395,13 @@ select.form-control {
 }
 
 .task-item {
-  background-color: var(--bg-medium);
-  border: 1px solid var(--border-primary);
-  border-radius: 4px;
   padding: var(--space-md);
   margin-bottom: var(--space-sm);
   display: flex;
-  transition: background-color var(--transition-speed) var(--transition-easing);
 }
 
 .task-list.grid-view .task-item {
   display: block;
-}
-
-.task-item:hover {
-  background-color: var(--bg-medium);
 }
 
 .task-item.completed {
