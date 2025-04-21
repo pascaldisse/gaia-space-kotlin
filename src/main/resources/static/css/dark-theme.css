@@ -764,6 +764,7 @@ select.form-control {
 
 .page-title {
   margin-bottom: var(--space-xs);
+  color: var(--text-primary);
 }
 
 .page-description {
@@ -837,12 +838,25 @@ select.form-control {
 .project-title {
   margin: 0;
   font-size: var(--font-size-h3);
+  color: var(--text-primary);
 }
 
 .project-description {
   margin-bottom: var(--space-md);
   color: var(--text-secondary);
   flex-grow: 1;
+}
+
+.workspace-title {
+  color: var(--text-primary);
+}
+
+.overview-title {
+  color: var(--text-secondary);
+}
+
+.calendar-title {
+  color: var(--text-primary);
 }
 
 .project-meta {
