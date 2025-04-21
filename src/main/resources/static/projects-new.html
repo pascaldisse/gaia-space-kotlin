@@ -7,7 +7,7 @@
     <meta name="description" content="Gaia Space - Create New Project">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/dark-theme.css">
-    <link rel="icon" href="/images/logo.png" type="image/png">
+    <link rel="icon" href="/images/fixed-logo.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .project-form {
@@ -142,7 +142,7 @@
         <div class="container">
             <nav class="navbar">
                 <a href="/" class="logo">
-                    <img src="/images/logo.png" alt="Gaia Space Logo"> Gaia Space
+                    <img src="/images/fixed-logo.svg" alt="Gaia Space Logo"> Gaia Space
                 </a>
                 <ul class="nav-links">
                     <li><a href="/dashboard">Dashboard</a></li>
@@ -286,9 +286,76 @@
             
             createButton.addEventListener('click', function() {
                 if (projectForm.checkValidity()) {
-                    // Normally we would submit to backend here
-                    // For now, just redirect back to projects page with success alert
-                    alert('Project created successfully! (Note: This is a demo - in a real application, this would be saved to the database)');
+                    const projectName = document.getElementById('project-name').value;
+                    const projectDescription = document.getElementById('project-description').value;
+                    const projectWorkspace = document.getElementById('project-workspace');
+                    const workspaceName = projectWorkspace.options[projectWorkspace.selectedIndex].text;
+                    const projectStatus = document.getElementById('project-status').value;
+                    const projectIcon = document.querySelector('input[name="icon"]').value;
+                    
+                    // Create a new project in the DOM and add it to projects list
+                    // This simulates what would happen after a real backend request
+                    
+                    // Create a new project in local storage for demo purposes
+                    const today = new Date();
+                    const formattedDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    
+                    const projectHTML = `
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-title-section">
+                                <div class="project-icon workspace-color-1">${projectIcon}</div>
+                                <div class="project-info">
+                                    <h3 class="project-title">${projectName}</h3>
+                                    <p class="project-subtitle">
+                                        <span class="project-workspace">${workspaceName}</span>
+                                        <span class="separator">•</span>
+                                        <span>Created ${formattedDate}</span>
+                                        <span class="project-status status-${projectStatus}">${projectStatus.charAt(0).toUpperCase() + projectStatus.slice(1)}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="project-actions">
+                                <button class="btn btn-outline btn-sm">Settings</button>
+                                <a href="/projects/new" class="btn btn-primary btn-sm">Open</a>
+                            </div>
+                        </div>
+                        
+                        <p class="project-description">
+                            ${projectDescription}
+                        </p>
+                        
+                        <div class="project-meta">
+                            <div class="meta-item">
+                                <span class="meta-icon">📊</span>
+                                <span>0 Tasks</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-icon">📝</span>
+                                <span>0 Documents</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-icon">📦</span>
+                                <span>0 Repositories</span>
+                            </div>
+                        </div>
+                        
+                        <div class="project-progress">
+                            <div class="progress-header">
+                                <p class="progress-title">Overall Progress</p>
+                                <span class="progress-percent">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    // In a real app, we would store this in the database via API
+                    localStorage.setItem('newProject', projectHTML);
+                    
+                    // Alert user and redirect
+                    alert('Project created successfully!');
                     window.location.href = '/projects';
                 } else {
                     projectForm.reportValidity();

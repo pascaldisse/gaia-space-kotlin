@@ -28,10 +28,15 @@ class SecurityConfig(
             .csrf { csrf -> csrf.disable() }
             .authorizeHttpRequests { authorize ->
                 authorize
+                    // Allow all static resources and paths
+                    .requestMatchers("/**").permitAll()
+                    // API endpoints that don't require auth
                     .requestMatchers("/api/users/register", "/api/users/login").permitAll()
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/docs/**").permitAll()
-                    .anyRequest().authenticated()
+                    // Only protect secured API endpoints
+                    .requestMatchers("/api/workspaces/**", "/api/projects/**", "/api/tasks/**", 
+                                   "/api/pipelines/**", "/api/discord/**").authenticated()
             }
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)

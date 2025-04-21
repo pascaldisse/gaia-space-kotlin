@@ -337,6 +337,17 @@
     <script src="/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if we have a new project from the create form
+            const newProject = localStorage.getItem('newProject');
+            if (newProject) {
+                // Insert the new project at the beginning of the projects list
+                const projectsList = document.querySelector('.projects-list');
+                projectsList.insertAdjacentHTML('afterbegin', newProject);
+                
+                // Remove the item from local storage to avoid duplicating
+                localStorage.removeItem('newProject');
+            }
+            
             // Workspace filter functionality
             const workspaceTags = document.querySelectorAll('.workspace-tag');
             workspaceTags.forEach(tag => {
