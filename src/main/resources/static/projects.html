@@ -337,8 +337,10 @@
     <script src="/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Add a test button to check localStorage (for debugging)
+            // Get projects list element
             const projectsList = document.querySelector('.projects-list');
+            
+            // Add a test button to check localStorage (for debugging)
             if (projectsList) {
                 const testButton = document.createElement('button');
                 testButton.innerText = 'Test localStorage';
@@ -361,9 +363,6 @@
             
             // Fetch projects from the API
             console.log('Fetching projects from API...');
-            
-            // Get projects list element
-            const projectsList = document.querySelector('.projects-list');
             if (!projectsList) {
                 console.error('Could not find projects list element');
                 return;
