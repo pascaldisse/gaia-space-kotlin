@@ -25,11 +25,8 @@ class SecurityConfig(
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
-            .csrf { csrf -> 
-                csrf.disable()
-                // Enable frame options for H2 console
-                .ignoringRequestMatchers("/h2-console/**")
-            }
+            .csrf { csrf -> csrf.disable() }
+            // Configure headers to allow H2 console to display in iframe
             .headers { headers ->
                 headers.frameOptions { frameOptions -> frameOptions.sameOrigin() }
             }
