@@ -319,19 +319,52 @@
             const newTaskForm = document.getElementById('new-task-form');
             newTaskForm.addEventListener('submit', function(event) {
                 event.preventDefault();
-                // Here you would normally send an API request
-                console.log('Creating task:', {
-                    title: document.getElementById('task-title').value,
-                    description: document.getElementById('task-description').value,
-                    project: document.getElementById('task-project').value,
-                    status: document.getElementById('task-status').value,
-                    priority: document.getElementById('task-priority').value,
-                    dueDate: document.getElementById('task-due-date').value,
-                    assignee: document.getElementById('task-assignee').value
-                });
                 
-                // For demo, redirect back to tasks page
-                alert('Task created successfully!');
+                // Get form values
+                const title = document.getElementById('task-title').value;
+                const description = document.getElementById('task-description').value;
+                const project = document.getElementById('task-project').value;
+                const status = document.getElementById('task-status').value;
+                const priority = document.getElementById('task-priority').value;
+                const dueDate = document.getElementById('task-due-date').value;
+                const assignee = document.getElementById('task-assignee').value;
+                
+                // Validate required fields
+                if (!title || !project) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                // Create task object
+                const newTask = {
+                    id: 'task-' + Date.now(), // Generate unique ID for the task
+                    title: title,
+                    description: description,
+                    project: project,
+                    status: status,
+                    priority: priority,
+                    dueDate: dueDate,
+                    assignee: assignee
+                };
+                
+                // Log the task for debugging
+                console.log('Creating task:', newTask);
+                
+                // Store the task in localStorage for persistence
+                // Get existing tasks or initialize empty array
+                let tasks = JSON.parse(localStorage.getItem('gaia-tasks') || '[]');
+                
+                // Add new task to the array
+                tasks.push(newTask);
+                
+                // Save back to localStorage
+                localStorage.setItem('gaia-tasks', JSON.stringify(tasks));
+                
+                // For demo, redirect back to tasks page with success message
+                sessionStorage.setItem('task-created', 'true');
+                sessionStorage.setItem('task-title', title);
+                
+                alert('Task created successfully! Redirecting to task list...');
                 window.location.href = '/tasks';
             });
         });

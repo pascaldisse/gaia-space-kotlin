@@ -1,6 +1,21 @@
 // Task View Management JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a recently created task notification
+    const taskCreated = sessionStorage.getItem('task-created');
+    const taskTitle = sessionStorage.getItem('task-title');
+    
+    if (taskCreated === 'true' && taskTitle) {
+        // Show notification
+        showFilterNotification(`Task "${taskTitle}" created successfully!`, 'success');
+        
+        // Clear the notification flags
+        sessionStorage.removeItem('task-created');
+        sessionStorage.removeItem('task-title');
+    }
+    
+    // Load tasks from localStorage and add them to the list
+    loadTasksFromStorage();
     // Task View Switching (List/Grid)
     const listViewBtn = document.getElementById('list-view');
     const gridViewBtn = document.getElementById('grid-view');
@@ -307,6 +322,128 @@ function parseDueDate(dueDateEl) {
     }
     
     return null;
+}
+
+// Load tasks from localStorage and render them
+function loadTasksFromStorage() {
+    const tasks = JSON.parse(localStorage.getItem('gaia-tasks') || '[]');
+    
+    if (tasks.length > 0) {
+        const taskListEl = document.getElementById('task-list');
+        if (!taskListEl) return;
+        
+        // Add user-created tasks to the list
+        tasks.forEach(task => {
+            // Get project name from project ID
+            let projectName = '';
+            switch (task.project) {
+                case '1':
+                    projectName = 'Gaia Space Backend';
+                    break;
+                case '2':
+                    projectName = 'Gaia Space Frontend';
+                    break;
+                case '3':
+                    projectName = 'Documentation';
+                    break;
+                default:
+                    projectName = 'Other Project';
+            }
+            
+            // Format date (if provided)
+            let dueDateFormatted = '';
+            if (task.dueDate) {
+                const date = new Date(task.dueDate);
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                dueDateFormatted = date.toLocaleDateString('en-US', options);
+            }
+            
+            // Create task item HTML
+            const taskHTML = `
+                <li class="task-item" id="${task.id}" data-priority="${task.priority}" data-status="${task.status}" data-project="${task.project}" data-assignee="${task.assignee || 'unassigned'}">
+                    <div class="task-checkbox">
+                        <input type="checkbox" id="checkbox-${task.id}" ${task.status === 'completed' ? 'checked' : ''}>
+                    </div>
+                    <div class="task-content">
+                        <h4 class="task-title">${task.title}</h4>
+                        <p class="task-description">${task.description || ''}</p>
+                        <div class="task-meta">
+                            <span class="task-project">${projectName}</span>
+                            ${dueDateFormatted ? `<span class="task-due">Due: ${dueDateFormatted}</span>` : ''}
+                            <span class="task-priority priority-${task.priority}" data-value="${task.priority}">${capitalizeFirstLetter(task.priority)}</span>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn btn-outline btn-sm">Edit</button>
+                    </div>
+                </li>
+            `;
+            
+            // Add task to list
+            taskListEl.insertAdjacentHTML('beforeend', taskHTML);
+        });
+        
+        // Re-initialize task data attributes and event listeners
+        initializeTaskDataAttributes();
+        
+        // Re-attach event listeners to new checkboxes
+        const newCheckboxes = document.querySelectorAll('.task-checkbox input');
+        newCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const taskItem = this.closest('.task-item');
+                if (this.checked) {
+                    taskItem.classList.add('completed');
+                    taskItem.setAttribute('data-status', 'completed');
+                    
+                    // Update task in localStorage
+                    updateTaskStatusInStorage(taskItem.id, 'completed');
+                    
+                    console.log('Task marked as completed:', taskItem.querySelector('.task-title').textContent);
+                    showFilterNotification(`Task "${taskItem.querySelector('.task-title').textContent}" marked as completed!`, 'success');
+                } else {
+                    taskItem.classList.remove('completed');
+                    taskItem.setAttribute('data-status', taskItem.getAttribute('data-original-status') || 'open');
+                    
+                    // Update task in localStorage
+                    updateTaskStatusInStorage(taskItem.id, 'open');
+                    
+                    console.log('Task marked as incomplete:', taskItem.querySelector('.task-title').textContent);
+                    showFilterNotification(`Task "${taskItem.querySelector('.task-title').textContent}" marked as in progress!`, 'info');
+                }
+            });
+        });
+        
+        // Re-attach event listeners to edit buttons
+        const editBtns = document.querySelectorAll('.task-item .task-actions .btn');
+        editBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const taskItem = this.closest('.task-item');
+                const taskTitle = taskItem.querySelector('.task-title').textContent;
+                
+                // If the button is a link (has href), don't show alert
+                if (!this.getAttribute('href')) {
+                    alert(`Editing task: ${taskTitle}`);
+                }
+                // In a real app, you would open a modal or navigate to the edit page
+            });
+        });
+    }
+}
+
+// Update task status in localStorage
+function updateTaskStatusInStorage(taskId, status) {
+    let tasks = JSON.parse(localStorage.getItem('gaia-tasks') || '[]');
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    
+    if (taskIndex !== -1) {
+        tasks[taskIndex].status = status;
+        localStorage.setItem('gaia-tasks', JSON.stringify(tasks));
+    }
+}
+
+// Helper function to capitalize first letter
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 function showFilterNotification(message, type = 'info') {
