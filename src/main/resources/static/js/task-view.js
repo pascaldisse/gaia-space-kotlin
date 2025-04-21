@@ -1,11 +1,196 @@
 // Task View Management JavaScript
 
+console.log('Task view script loaded');
+
+// Function to fetch tasks from API and update the task list
+function fetchTasks() {
+    console.log('Fetching tasks from API');
+    // Get the current project ID from URL parameters or use a default
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('project') || '1';  // Default to project ID 1
+    
+    // Add a demo task if we need to test with data
+    if (window.location.search.includes('add-demo-task=true')) {
+        console.log('Adding a demo task via API');
+        
+        // Create a demo task
+        const demoTask = {
+            title: 'Demo Task ' + new Date().toISOString().substring(11, 19),
+            description: 'This is a demo task created for testing',
+            projectId: projectId,
+            status: 'todo',
+            priority: 'medium',
+            dueDate: new Date().toISOString().split('T')[0]
+        };
+        
+        // Post the demo task
+        fetch('/api/tasks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(demoTask)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Demo task created:', data);
+            // After creating, fetch all tasks including the new one
+            fetchAllTasks(projectId);
+        })
+        .catch(error => {
+            console.error('Error creating demo task:', error);
+            // Even if creation fails, try to fetch existing tasks
+            fetchAllTasks(projectId);
+        });
+    } else {
+        // Just fetch all tasks without adding a demo task
+        fetchAllTasks(projectId);
+    }
+}
+
+// Fetch all tasks for a project
+function fetchAllTasks(projectId) {
+    // API endpoint for tasks
+    console.log(`Making API request to: /api/tasks?projectId=${projectId}`);
+    fetch(`/api/tasks?projectId=${projectId}`)
+        .then(response => {
+            console.log('API Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(tasks => {
+            console.log('Tasks fetched successfully:', tasks);
+            
+            // Process tasks into the DOM if there are any
+            if (tasks && tasks.length > 0) {
+                updateTasksList(tasks);
+            } else {
+                console.log('No tasks found for this project');
+                
+                // Use dummy tasks for demonstration if needed
+                if (window.location.search.includes('use-dummy=true')) {
+                    console.log('Using dummy tasks for demonstration');
+                    const dummyTasks = generateDummyTasks();
+                    updateTasksList(dummyTasks);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching tasks:', error);
+        });
+}
+
+// Generate dummy tasks for demonstration
+function generateDummyTasks() {
+    return [
+        {
+            id: 'dummy-1',
+            title: 'Implement user authentication',
+            description: 'Create login and registration functionality',
+            projectId: '1',
+            status: 'todo',
+            priority: 'high',
+            dueDate: '2025-04-30'
+        },
+        {
+            id: 'dummy-2',
+            title: 'Design dashboard UI',
+            description: 'Create wireframes and mockups for the dashboard',
+            projectId: '1',
+            status: 'in-progress',
+            priority: 'medium',
+            dueDate: '2025-05-10'
+        },
+        {
+            id: 'dummy-3',
+            title: 'Write documentation',
+            description: 'Document API endpoints and usage',
+            projectId: '1',
+            status: 'done',
+            priority: 'low',
+            dueDate: '2025-04-15'
+        }
+    ];
+}
+
+// Function to update the tasks list with fetched tasks
+function updateTasksList(tasks) {
+    console.log('Updating tasks list with', tasks.length, 'tasks');
+    
+    const taskList = document.getElementById('task-list');
+    if (!taskList) {
+        console.error('Task list element not found!');
+        return;
+    }
+    
+    // Clear existing dummy tasks
+    taskList.innerHTML = '';
+    
+    // Add fetched tasks to the list
+    tasks.forEach(task => {
+        const taskItem = createTaskListItem(task);
+        taskList.appendChild(taskItem);
+    });
+    
+    // Re-initialize tasks to ensure data attributes are set
+    initializeTasks();
+    
+    console.log('Task list updated successfully');
+}
+
+// Function to create a task list item
+function createTaskListItem(task) {
+    const li = document.createElement('li');
+    li.className = 'task-item';
+    li.id = `task-${task.id}`;
+    
+    // Set data attributes
+    li.setAttribute('data-status', task.status?.toLowerCase() || 'todo');
+    li.setAttribute('data-priority', task.priority?.toLowerCase() || 'medium');
+    li.setAttribute('data-project', task.projectId || '1');
+    
+    li.innerHTML = `
+        <div class="task-checkbox">
+            <input type="checkbox" id="check-task-${task.id}" ${task.status === 'DONE' ? 'checked' : ''}>
+        </div>
+        <div class="task-content">
+            <h4 class="task-title">${task.title}</h4>
+            <p class="task-description">${task.description || ''}</p>
+            <div class="task-meta">
+                <span class="task-project">${task.projectName || 'Project'}</span>
+                <span class="task-due">Due: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</span>
+                <span class="task-priority priority-${task.priority?.toLowerCase() || 'medium'}" data-value="${task.priority?.toLowerCase() || 'medium'}">${capitalizeFirstLetter(task.priority?.toLowerCase() || 'medium')}</span>
+            </div>
+        </div>
+        <div class="task-actions">
+            <button class="btn btn-outline btn-sm">Edit</button>
+        </div>
+    `;
+    
+    return li;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM content loaded, initializing task view');
+    
+    // Fetch tasks from API
+    fetchTasks();
+    
     // Initialize tasks
     initializeTasks();
     
     // Setup event listeners
     setupEventListeners();
+    
+    // Debug check for kanban button
+    const kanbanViewBtn = document.getElementById('kanban-view');
+    if (kanbanViewBtn) {
+        console.log('Kanban view button found:', kanbanViewBtn);
+    } else {
+        console.error('Kanban view button not found!');
+    }
 });
 
 function initializeTasks() {
@@ -55,13 +240,13 @@ function setupEventListeners() {
     const listViewBtn = document.getElementById('list-view');
     const gridViewBtn = document.getElementById('grid-view');
     const kanbanViewBtn = document.getElementById('kanban-view');
-    const headerKanbanViewBtn = document.getElementById('header-kanban-view');
     const taskList = document.getElementById('task-list');
     const kanbanBoard = document.getElementById('kanban-board');
     
     if (taskList && kanbanBoard) {
         // Function to switch to kanban view
         const switchToKanbanView = function() {
+            console.log('Switching to kanban view');
             // Hide task list, show kanban
             taskList.style.display = 'none';
             kanbanBoard.style.display = 'flex';
@@ -73,8 +258,10 @@ function setupEventListeners() {
                 gridViewBtn.classList.remove('active');
             }
             
-            // Initialize kanban board
+            // Log kanban board initialization
+            console.log('Initializing kanban board...');
             initializeKanbanBoard();
+            console.log('Kanban board initialized successfully');
             
             // Show notification
             showNotification('Switched to kanban view', 'info');
@@ -83,6 +270,7 @@ function setupEventListeners() {
         // List view button
         if (listViewBtn) {
             listViewBtn.addEventListener('click', function() {
+                console.log('Switching to list view');
                 // Show task list, hide kanban
                 taskList.style.display = 'block';
                 taskList.classList.remove('grid-view');
@@ -101,6 +289,7 @@ function setupEventListeners() {
         // Grid view button
         if (gridViewBtn) {
             gridViewBtn.addEventListener('click', function() {
+                console.log('Switching to grid view');
                 // Show task list in grid view, hide kanban
                 taskList.style.display = 'block';
                 taskList.classList.add('grid-view');
@@ -118,12 +307,11 @@ function setupEventListeners() {
         
         // Kanban view from toggle buttons
         if (kanbanViewBtn) {
-            kanbanViewBtn.addEventListener('click', switchToKanbanView);
-        }
-        
-        // Kanban view from header button
-        if (headerKanbanViewBtn) {
-            headerKanbanViewBtn.addEventListener('click', switchToKanbanView);
+            console.log('Adding event listener to kanban view button');
+            kanbanViewBtn.addEventListener('click', function() {
+                console.log('Kanban view button clicked!');
+                switchToKanbanView();
+            });
         }
     }
     
@@ -537,18 +725,77 @@ function capitalizeFirstLetter(string) {
 
 // Kanban Board Functions
 function initializeKanbanBoard() {
+    console.log('%c📋 Starting Kanban board initialization', 'color: blue; font-weight: bold');
+    
     // Clear existing tasks from kanban columns
+    console.log('Clearing existing kanban tasks');
     document.querySelectorAll('.kanban-tasks').forEach(column => {
         column.innerHTML = '';
     });
     
     // Reset task counts
+    console.log('Resetting task counts');
     document.querySelectorAll('.kanban-column .task-count').forEach(count => {
         count.textContent = '0';
     });
     
-    // Get all tasks from the task list
-    const tasks = document.querySelectorAll('.task-item');
+    // Check if we should fetch tasks directly for Kanban board
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('project') || '1';  // Default to project ID 1
+    console.log(`Loading tasks for project ID: ${projectId}`);
+    
+    // Always fetch tasks from DB for Kanban view for consistency
+    console.log('%c📥 Fetching all tasks from database for Kanban view', 'color: green');
+    
+    // Create dummy tasks for testing if we detect we're in test/debug mode
+    if (window.location.search.includes('dummy=true')) {
+        console.log('Test mode detected: Creating dummy tasks for testing Kanban');
+        const dummyTasks = generateDummyTasks();
+        populateKanbanWithTasks(dummyTasks);
+        return;
+    }
+    
+    // Fetch tasks specifically for Kanban
+    console.log(`Making Kanban API request to: /api/tasks?projectId=${projectId}`);
+    fetch(`/api/tasks?projectId=${projectId}`)
+        .then(response => response.json())
+        .then(apiTasks => {
+            console.log(`%c✅ Fetched ${apiTasks.length} tasks from database for Kanban view:`, 'color: green; font-weight: bold');
+            console.table(apiTasks.map(t => ({
+                id: t.id,
+                title: t.title,
+                status: t.status,
+                priority: t.priority
+            })));
+            
+            if (apiTasks.length === 0) {
+                console.log('No tasks found in database, checking DOM');
+                // If no tasks in DB, check DOM as fallback
+                const domTasks = document.querySelectorAll('.task-item');
+                if (domTasks.length > 0) {
+                    console.log(`Found ${domTasks.length} tasks in DOM, using those for Kanban`);
+                    processTasksForKanban(domTasks);
+                } else {
+                    console.log('No tasks found in DOM either. Kanban will be empty.');
+                }
+            } else {
+                // Use tasks from the database
+                populateKanbanWithTasks(apiTasks);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching tasks for Kanban:', error);
+            // Fallback to DOM tasks if API fails
+            const domTasks = document.querySelectorAll('.task-item');
+            if (domTasks.length > 0) {
+                console.log(`API failed, but found ${domTasks.length} tasks in DOM. Using those for Kanban.`);
+                processTasksForKanban(domTasks);
+            }
+        });
+}
+
+function populateKanbanWithTasks(apiTasks) {
+    console.log('%c🧩 Organizing tasks into Kanban columns', 'color: purple; font-weight: bold');
     
     // Group tasks by status
     const tasksByStatus = {
@@ -558,10 +805,74 @@ function initializeKanbanBoard() {
         'backlog': []
     };
     
+    // Process API tasks
+    apiTasks.forEach(task => {
+        console.log(`Processing task: "${task.title}" (ID: ${task.id}, Status: ${task.status || 'undefined'})`);
+        
+        // Map API status to kanban status
+        let kanbanStatus = task.status?.toLowerCase() || 'todo';
+        
+        // Status mapping to handle different status values
+        if (kanbanStatus === 'done') {
+            kanbanStatus = 'done';
+        } else if (kanbanStatus === 'open') {
+            // Map "open" status to "todo" column
+            kanbanStatus = 'todo';
+        } else if (kanbanStatus === 'in_progress' || kanbanStatus === 'in progress') {
+            kanbanStatus = 'in-progress';
+        }
+        
+        console.log(`🔄 Task "${task.title}": Mapped status "${task.status}" to kanban column "${kanbanStatus}"`);
+        
+        // Create task object for kanban
+        const kanbanTask = {
+            taskId: `task-${task.id}`,
+            title: task.title,
+            description: task.description || '',
+            priority: task.priority?.toLowerCase() || 'medium',
+            project: task.projectName || 'Project'
+        };
+        
+        // Add task to appropriate group
+        if (tasksByStatus[kanbanStatus]) {
+            tasksByStatus[kanbanStatus].push(kanbanTask);
+            console.log(`✅ Added task "${task.title}" to "${kanbanStatus}" column`);
+        } else {
+            // Default to todo if status doesn't match a column
+            tasksByStatus['todo'].push(kanbanTask);
+            console.log(`⚠️ Unknown status "${task.status}" - Defaulted task "${task.title}" to "todo" column`);
+        }
+    });
+    
+    // Render Kanban columns with tasks
+    renderKanbanTasks(tasksByStatus);
+}
+
+function processTasksForKanban(domTasks) {
+    // Group tasks by status
+    const tasksByStatus = {
+        'todo': [],
+        'in-progress': [],
+        'done': [],
+        'backlog': []
+    };
+    console.log('Created status containers for tasks');
+    
     // Process each task and group by status
-    tasks.forEach(task => {
+    domTasks.forEach(task => {
         // Get task data
-        const status = task.getAttribute('data-status') || 'todo';
+        const rawStatus = task.getAttribute('data-status') || 'todo';
+        console.log('Processing DOM task with status:', rawStatus);
+        
+        // Map status values to kanban columns
+        let status = rawStatus;
+        if (rawStatus === 'open') {
+            status = 'todo';
+            console.log('Mapped "open" status to "todo" column');
+        } else if (rawStatus === 'in_progress' || rawStatus === 'in progress') {
+            status = 'in-progress';
+            console.log('Mapped "in_progress" to "in-progress" column');
+        }
         const taskId = task.id;
         const title = task.querySelector('.task-title').textContent;
         const description = task.querySelector('.task-description')?.textContent || '';
@@ -582,6 +893,14 @@ function initializeKanbanBoard() {
         }
     });
     
+    // Call the renderKanbanTasks function to render the tasks
+    renderKanbanTasks(tasksByStatus);
+}
+
+// Function to render tasks in kanban columns
+function renderKanbanTasks(tasksByStatus) {
+    console.log('%c🎨 Rendering tasks in Kanban columns', 'color: orange; font-weight: bold');
+    
     // Render tasks in each column
     for (const [status, statusTasks] of Object.entries(tasksByStatus)) {
         const columnEl = document.getElementById(`kanban-${status}`);
@@ -590,18 +909,42 @@ function initializeKanbanBoard() {
             const countEl = columnEl.closest('.kanban-column').querySelector('.task-count');
             if (countEl) {
                 countEl.textContent = statusTasks.length;
+                console.log(`📊 ${status} column: ${statusTasks.length} tasks`);
             }
             
             // Render tasks
             statusTasks.forEach(task => {
                 const taskCard = createKanbanCard(task, status);
                 columnEl.appendChild(taskCard);
+                console.log(`📌 Rendered task "${task.title}" in ${status} column`);
             });
+        } else {
+            console.error(`❌ Could not find column element for status: ${status}`);
         }
     }
     
     // Setup drag and drop (for future implementation)
     setupKanbanDragAndDrop();
+    
+    // Summary of tasks by status
+    const statusSummary = {
+        'todo': tasksByStatus['todo'].length,
+        'in-progress': tasksByStatus['in-progress'].length,
+        'done': tasksByStatus['done'].length,
+        'backlog': tasksByStatus['backlog'].length
+    };
+    
+    console.log('%c✨ Kanban board initialization complete', 'color: green; font-weight: bold');
+    console.log('%c📊 Task counts by status:', 'color: blue', statusSummary);
+    
+    // Log empty columns as a hint
+    const emptyColumns = Object.entries(statusSummary)
+        .filter(([_, count]) => count === 0)
+        .map(([status, _]) => status);
+    
+    if (emptyColumns.length > 0) {
+        console.log(`ℹ️ The following columns are empty: ${emptyColumns.join(', ')}`);
+    }
 }
 
 function createKanbanCard(task, status) {

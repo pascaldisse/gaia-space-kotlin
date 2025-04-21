@@ -44,7 +44,6 @@
                             <h3 class="card-title">All Tasks</h3>
                             <div class="card-actions">
                                 <button class="btn btn-outline btn-sm">Filter</button>
-                                <button id="header-kanban-view" class="btn btn-outline btn-sm">Kanban</button>
                                 <a href="/tasks/new" class="btn btn-primary btn-sm">Add Task</a>
                             </div>
                         </div>
@@ -606,5 +605,90 @@
 
     <script src="/js/app.js"></script>
     <script src="/js/task-view.js"></script>
+    
+    <script>
+        // Add a function to create a demo task
+        function createDemoTask() {
+            console.log('Creating demo task via API');
+            
+            const projectId = new URLSearchParams(window.location.search).get('project') || '1';
+            
+            // Create a demo task with current timestamp to make it unique
+            const demoTask = {
+                title: 'Demo Task ' + new Date().toTimeString().split(' ')[0],
+                description: 'This is a demo task created for testing the Kanban view',
+                projectId: projectId,
+                status: 'todo',
+                priority: 'medium'
+            };
+            
+            // Send POST request to create task
+            fetch('/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(demoTask)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create demo task: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Demo task created successfully:', data);
+                alert('Demo task created! Click the Kanban button to see it in action.');
+                // Reload the page to refresh the task list
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error creating demo task:', error);
+                alert('Error creating demo task: ' + error.message);
+            });
+        }
+    
+        // Direct event handler to ensure it works
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Adding direct event listener to kanban button');
+            
+            // Add a "Create Demo Task" button to the header for testing
+            const cardActions = document.querySelector('.card-actions');
+            if (cardActions) {
+                const demoButton = document.createElement('button');
+                demoButton.className = 'btn btn-outline btn-sm';
+                demoButton.style.backgroundColor = '#E91E63';
+                demoButton.style.color = 'white';
+                demoButton.textContent = 'Create Demo Task';
+                demoButton.addEventListener('click', createDemoTask);
+                cardActions.appendChild(demoButton);
+            }
+            
+            const kanbanBtn = document.getElementById('kanban-view');
+            if (kanbanBtn) {
+                console.log('Direct handler: Kanban button found, adding click handler');
+                kanbanBtn.addEventListener('click', function() {
+                    console.log('DIRECT HANDLER: Kanban button clicked!');
+                    const taskList = document.getElementById('task-list');
+                    const kanbanBoard = document.getElementById('kanban-board');
+                    
+                    if (taskList && kanbanBoard) {
+                        console.log('DIRECT HANDLER: Switching to kanban view');
+                        taskList.style.display = 'none';
+                        kanbanBoard.style.display = 'flex';
+                        
+                        // Update active button states
+                        document.getElementById('list-view').classList.remove('active');
+                        document.getElementById('grid-view').classList.remove('active');
+                        kanbanBtn.classList.add('active');
+                    } else {
+                        console.error('DIRECT HANDLER: Task list or kanban board elements not found');
+                    }
+                });
+            } else {
+                console.error('DIRECT HANDLER: Kanban button not found!');
+            }
+        });
+    </script>
 </body>
 </html>
