@@ -9,43 +9,8 @@ function fetchTasks() {
     const urlParams = new URLSearchParams(window.location.search);
     const projectId = urlParams.get('project') || '1';  // Default to project ID 1
     
-    // Add a demo task if we need to test with data
-    if (window.location.search.includes('add-demo-task=true')) {
-        console.log('Adding a demo task via API');
-        
-        // Create a demo task
-        const demoTask = {
-            title: 'Demo Task ' + new Date().toISOString().substring(11, 19),
-            description: 'This is a demo task created for testing',
-            projectId: projectId,
-            status: 'todo',
-            priority: 'medium',
-            dueDate: new Date().toISOString().split('T')[0]
-        };
-        
-        // Post the demo task
-        fetch('/api/tasks', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(demoTask)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Demo task created:', data);
-            // After creating, fetch all tasks including the new one
-            fetchAllTasks(projectId);
-        })
-        .catch(error => {
-            console.error('Error creating demo task:', error);
-            // Even if creation fails, try to fetch existing tasks
-            fetchAllTasks(projectId);
-        });
-    } else {
-        // Just fetch all tasks without adding a demo task
-        fetchAllTasks(projectId);
-    }
+    // Fetch all tasks
+    fetchAllTasks(projectId);
 }
 
 // Fetch all tasks for a project
@@ -68,51 +33,13 @@ function fetchAllTasks(projectId) {
                 updateTasksList(tasks);
             } else {
                 console.log('No tasks found for this project');
-                
-                // Use dummy tasks for demonstration if needed
-                if (window.location.search.includes('use-dummy=true')) {
-                    console.log('Using dummy tasks for demonstration');
-                    const dummyTasks = generateDummyTasks();
-                    updateTasksList(dummyTasks);
-                }
+                // Empty the task list to show no data
+                updateTasksList([]);
             }
         })
         .catch(error => {
             console.error('Error fetching tasks:', error);
         });
-}
-
-// Generate dummy tasks for demonstration
-function generateDummyTasks() {
-    return [
-        {
-            id: 'dummy-1',
-            title: 'Implement user authentication',
-            description: 'Create login and registration functionality',
-            projectId: '1',
-            status: 'todo',
-            priority: 'high',
-            dueDate: '2025-04-30'
-        },
-        {
-            id: 'dummy-2',
-            title: 'Design dashboard UI',
-            description: 'Create wireframes and mockups for the dashboard',
-            projectId: '1',
-            status: 'in-progress',
-            priority: 'medium',
-            dueDate: '2025-05-10'
-        },
-        {
-            id: 'dummy-3',
-            title: 'Write documentation',
-            description: 'Document API endpoints and usage',
-            projectId: '1',
-            status: 'done',
-            priority: 'low',
-            dueDate: '2025-04-15'
-        }
-    ];
 }
 
 // Function to update the tasks list with fetched tasks
@@ -125,7 +52,7 @@ function updateTasksList(tasks) {
         return;
     }
     
-    // Clear existing dummy tasks
+    // Clear existing tasks
     taskList.innerHTML = '';
     
     // Add fetched tasks to the list
@@ -136,6 +63,17 @@ function updateTasksList(tasks) {
     
     // Re-initialize tasks to ensure data attributes are set
     initializeTasks();
+    
+    // Show a message if no tasks were found
+    if (tasks.length === 0) {
+        const noTasksMessage = document.createElement('li');
+        noTasksMessage.className = 'no-tasks-message';
+        noTasksMessage.style.textAlign = 'center';
+        noTasksMessage.style.padding = '20px';
+        noTasksMessage.style.color = 'var(--text-secondary)';
+        noTasksMessage.innerHTML = 'No tasks found. <a href="/tasks/new">Create a new task</a> to get started.';
+        taskList.appendChild(noTasksMessage);
+    }
     
     console.log('Task list updated successfully');
 }
@@ -202,19 +140,29 @@ function initializeTasks() {
         const priorityEl = task.querySelector('.task-priority');
         if (priorityEl) {
             if (priorityEl.classList.contains('priority-high')) {
-                task.setAttribute('data-priority', 'high');
+                task.setAttribute('data-priority', 'HIGH');
             } else if (priorityEl.classList.contains('priority-medium')) {
-                task.setAttribute('data-priority', 'medium');
+                task.setAttribute('data-priority', 'MEDIUM');
             } else if (priorityEl.classList.contains('priority-low')) {
-                task.setAttribute('data-priority', 'low');
+                task.setAttribute('data-priority', 'LOW');
+            } else if (priorityEl.classList.contains('priority-critical')) {
+                task.setAttribute('data-priority', 'CRITICAL');
             }
         }
         
-        // Set Status (based on completion or default to 'open')
-        if (task.classList.contains('completed')) {
-            task.setAttribute('data-status', 'completed');
-        } else {
-            task.setAttribute('data-status', 'open');
+        // Get status from data attribute or checkbox state
+        const checkbox = task.querySelector('.task-checkbox input');
+        if (checkbox && checkbox.checked) {
+            task.setAttribute('data-status', 'DONE');
+        } else if (!task.getAttribute('data-status')) {
+            // Default to 'TODO' if no status is set
+            task.setAttribute('data-status', 'TODO');
+        }
+        
+        // Convert status to uppercase to match enum values
+        const status = task.getAttribute('data-status');
+        if (status) {
+            task.setAttribute('data-status', status.toUpperCase());
         }
         
         // Set Project
@@ -499,7 +447,7 @@ function updateTaskCounts() {
     
     // Count todo tasks
     const todoTasks = Array.from(allTasks).filter(task => 
-        task.getAttribute('data-status') === 'todo').length;
+        task.getAttribute('data-status') === 'TODO').length;
     
     const todoElement = document.querySelector('.stat-value:nth-of-type(2)');
     if (todoElement) {
@@ -508,7 +456,7 @@ function updateTaskCounts() {
     
     // Count in-progress
     const inProgressTasks = Array.from(allTasks).filter(task => 
-        task.getAttribute('data-status') === 'in-progress').length;
+        task.getAttribute('data-status') === 'IN_PROGRESS').length;
     
     const inProgressElement = document.querySelector('.stat-value:nth-of-type(3)');
     if (inProgressElement) {
@@ -517,7 +465,7 @@ function updateTaskCounts() {
     
     // Count done
     const doneTasks = Array.from(allTasks).filter(task => 
-        task.getAttribute('data-status') === 'done').length;
+        task.getAttribute('data-status') === 'DONE').length;
     
     const doneElement = document.querySelector('.stat-value:nth-of-type(4)');
     if (doneElement) {
@@ -526,7 +474,7 @@ function updateTaskCounts() {
     
     // Count backlog
     const backlogTasks = Array.from(allTasks).filter(task => 
-        task.getAttribute('data-status') === 'backlog').length;
+        task.getAttribute('data-status') === 'BACKLOG').length;
     
     const backlogElement = document.querySelector('.stat-value:nth-of-type(5)');
     if (backlogElement) {
@@ -747,37 +695,16 @@ function initializeKanbanBoard() {
     // Always fetch tasks from DB for Kanban view for consistency
     console.log('%c📥 Fetching all tasks from database for Kanban view', 'color: green');
     
-    // Create dummy tasks for testing if we detect we're in test/debug mode
-    if (window.location.search.includes('dummy=true')) {
-        console.log('Test mode detected: Creating dummy tasks for testing Kanban');
-        const dummyTasks = generateDummyTasks();
-        populateKanbanWithTasks(dummyTasks);
-        return;
-    }
-    
     // Fetch tasks specifically for Kanban
     console.log(`Making Kanban API request to: /api/tasks?projectId=${projectId}`);
     fetch(`/api/tasks?projectId=${projectId}`)
         .then(response => response.json())
         .then(apiTasks => {
             console.log(`%c✅ Fetched ${apiTasks.length} tasks from database for Kanban view:`, 'color: green; font-weight: bold');
-            console.table(apiTasks.map(t => ({
-                id: t.id,
-                title: t.title,
-                status: t.status,
-                priority: t.priority
-            })));
+            console.log(apiTasks);
             
             if (apiTasks.length === 0) {
-                console.log('No tasks found in database, checking DOM');
-                // If no tasks in DB, check DOM as fallback
-                const domTasks = document.querySelectorAll('.task-item');
-                if (domTasks.length > 0) {
-                    console.log(`Found ${domTasks.length} tasks in DOM, using those for Kanban`);
-                    processTasksForKanban(domTasks);
-                } else {
-                    console.log('No tasks found in DOM either. Kanban will be empty.');
-                }
+                console.log('No tasks found in database. Kanban will be empty.');
             } else {
                 // Use tasks from the database
                 populateKanbanWithTasks(apiTasks);
@@ -785,12 +712,6 @@ function initializeKanbanBoard() {
         })
         .catch(error => {
             console.error('Error fetching tasks for Kanban:', error);
-            // Fallback to DOM tasks if API fails
-            const domTasks = document.querySelectorAll('.task-item');
-            if (domTasks.length > 0) {
-                console.log(`API failed, but found ${domTasks.length} tasks in DOM. Using those for Kanban.`);
-                processTasksForKanban(domTasks);
-            }
         });
 }
 
@@ -826,7 +747,7 @@ function populateKanbanWithTasks(apiTasks) {
         
         // Create task object for kanban
         const kanbanTask = {
-            taskId: `task-${task.id}`,
+            taskId: task.id.startsWith('task-') ? task.id : `task-${task.id}`,
             title: task.title,
             description: task.description || '',
             priority: task.priority?.toLowerCase() || 'medium',
@@ -848,53 +769,9 @@ function populateKanbanWithTasks(apiTasks) {
     renderKanbanTasks(tasksByStatus);
 }
 
+// This function is no longer used since we only load from database
 function processTasksForKanban(domTasks) {
-    // Group tasks by status
-    const tasksByStatus = {
-        'todo': [],
-        'in-progress': [],
-        'done': [],
-        'backlog': []
-    };
-    console.log('Created status containers for tasks');
-    
-    // Process each task and group by status
-    domTasks.forEach(task => {
-        // Get task data
-        const rawStatus = task.getAttribute('data-status') || 'todo';
-        console.log('Processing DOM task with status:', rawStatus);
-        
-        // Map status values to kanban columns
-        let status = rawStatus;
-        if (rawStatus === 'open') {
-            status = 'todo';
-            console.log('Mapped "open" status to "todo" column');
-        } else if (rawStatus === 'in_progress' || rawStatus === 'in progress') {
-            status = 'in-progress';
-            console.log('Mapped "in_progress" to "in-progress" column');
-        }
-        const taskId = task.id;
-        const title = task.querySelector('.task-title').textContent;
-        const description = task.querySelector('.task-description')?.textContent || '';
-        const priority = task.getAttribute('data-priority') || 'medium';
-        const projectEl = task.querySelector('.task-project');
-        const project = projectEl ? projectEl.textContent : '';
-        
-        // Add task to appropriate group
-        if (status === 'completed') {
-            // Map "completed" to "done" for kanban
-            tasksByStatus['done'].push({ taskId, title, description, priority, project });
-        } else if (tasksByStatus[status]) {
-            // Add to mapped status if it exists
-            tasksByStatus[status].push({ taskId, title, description, priority, project });
-        } else {
-            // Default to todo if status is unknown
-            tasksByStatus['todo'].push({ taskId, title, description, priority, project });
-        }
-    });
-    
-    // Call the renderKanbanTasks function to render the tasks
-    renderKanbanTasks(tasksByStatus);
+    console.log('processTasksForKanban is deprecated - only loading from database now');
 }
 
 // Function to render tasks in kanban columns

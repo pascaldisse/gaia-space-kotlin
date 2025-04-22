@@ -18,6 +18,14 @@ class TaskService(
     private val userRepository: UserRepository
 ) {
     
+    fun findAll(): List<Task> {
+        return taskRepository.findAll().toList()
+    }
+    
+    fun countAll(): Long {
+        return taskRepository.count()
+    }
+    
     fun findById(id: String): Task? {
         return taskRepository.findById(id).orElse(null)
     }

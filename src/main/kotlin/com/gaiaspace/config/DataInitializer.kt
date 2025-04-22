@@ -1,6 +1,10 @@
 package com.gaiaspace.config
 
+import com.gaiaspace.domain.model.Task
+import com.gaiaspace.domain.model.TaskPriority
+import com.gaiaspace.domain.model.TaskStatus
 import com.gaiaspace.domain.model.User
+import com.gaiaspace.domain.repository.TaskRepository
 import com.gaiaspace.domain.repository.UserRepository
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
@@ -14,7 +18,10 @@ class DataInitializer {
 
     @Bean
     @Profile("dev")
-    fun initializeData(userRepository: UserRepository, passwordEncoder: PasswordEncoder): CommandLineRunner {
+    fun initializeData(
+        userRepository: UserRepository, 
+        passwordEncoder: PasswordEncoder
+    ): CommandLineRunner {
         return CommandLineRunner {
             // Create a test admin user if it doesn't exist
             if (!userRepository.existsByUsername("admin")) {

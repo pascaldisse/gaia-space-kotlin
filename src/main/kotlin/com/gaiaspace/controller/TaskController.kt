@@ -35,7 +35,7 @@ class TaskController(
     @GetMapping
     // @PreAuthorize("isAuthenticated()") - Removed temporarily for demo
     fun getTasks(
-        @RequestParam(required = true) projectId: String,
+        @RequestParam(required = false) projectId: String?,
         @RequestParam(required = false) status: TaskStatus?,
         @RequestParam(required = false) assigneeId: String?,
         @RequestParam(required = false) dueDateFrom: LocalDate?,
@@ -43,23 +43,18 @@ class TaskController(
         @RequestParam(required = false) priority: String?,
         @RequestParam(required = false) searchTerm: String?
     ): ResponseEntity<List<TaskResponse>> {
-        val filter = FilterTasksRequest(
-            projectId = projectId,
-            status = status,
-            assigneeId = assigneeId,
-            dueDateFrom = dueDateFrom,
-            dueDateTo = dueDateTo,
-            priority = priority,
-            searchTerm = searchTerm
-        )
-        
-        val tasks = when {
-            // Apply filters in order of precedence
-            searchTerm != null -> taskService.searchTasksByTitle(projectId, searchTerm)
-            status != null -> taskService.findByProjectIdAndStatus(projectId, status)
-            assigneeId != null -> taskService.findByAssigneeId(assigneeId)
-            dueDateFrom != null && dueDateTo != null -> taskService.findByDueDateRange(dueDateFrom, dueDateTo)
-            else -> taskService.findByProjectId(projectId)
+        val tasks = if (projectId != null) {
+            when {
+                // Apply filters in order of precedence
+                searchTerm != null -> taskService.searchTasksByTitle(projectId, searchTerm)
+                status != null -> taskService.findByProjectIdAndStatus(projectId, status)
+                assigneeId != null -> taskService.findByAssigneeId(assigneeId)
+                dueDateFrom != null && dueDateTo != null -> taskService.findByDueDateRange(dueDateFrom, dueDateTo)
+                else -> taskService.findByProjectId(projectId)
+            }
+        } else {
+            // Return all tasks if no project ID specified
+            taskService.findAll()
         }
         
         return ResponseEntity.ok(tasks.map { TaskResponse.fromTask(it) })
@@ -68,13 +63,13 @@ class TaskController(
     @GetMapping("/count")
     @PreAuthorize("isAuthenticated()")
     fun countTasks(
-        @RequestParam projectId: String,
+        @RequestParam(required = false) projectId: String?,
         @RequestParam(required = false) status: TaskStatus?
     ): ResponseEntity<Map<String, Long>> {
-        val count = if (status != null) {
-            taskService.countTasksByProjectIdAndStatus(projectId, status)
-        } else {
-            taskService.countTasksByProjectId(projectId)
+        val count = when {
+            projectId != null && status != null -> taskService.countTasksByProjectIdAndStatus(projectId, status)
+            projectId != null -> taskService.countTasksByProjectId(projectId)
+            else -> taskService.countAll()
         }
         
         return ResponseEntity.ok(mapOf("count" to count))
