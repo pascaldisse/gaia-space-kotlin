@@ -1,0 +1,675 @@
+// GaiaSpace Application in GaiaScript
+// This represents the core domain model and application structure
+
+// Application definition
+application GaiaSpace {
+  // Package declaration
+  package: "com.gaiaspace"
+  
+  // Main application entry point
+  @SpringBootApplication
+  class GaiaSpaceApplication {}
+  
+  // Main function
+  function main(args: String[]) {
+    runApplication<GaiaSpaceApplication>(*args)
+  }
+}
+
+// Domain Models
+// User model
+@Entity
+model User {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  @Column(unique = true)
+  username: String
+  
+  @Column(unique = true)
+  email: String
+  
+  displayName: String
+  
+  @JsonIgnore
+  password: String
+  
+  avatarUrl: String?
+  
+  @ElementCollection(fetch = FetchType.EAGER)
+  @Enumerated(EnumType.STRING)
+  roles: Set<UserRole> = setOf(UserRole.USER)
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// User role enum
+enum UserRole {
+  USER, ADMIN, MANAGER
+}
+
+// Workspace model
+@Entity
+model Workspace {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  name: String
+  description: String
+  avatarUrl: String?
+  
+  @ManyToOne
+  createdBy: User
+  
+  @OneToMany(mappedBy = "workspace", cascade = [CascadeType.ALL])
+  projects: MutableList<Project> = mutableListOf()
+  
+  @OneToMany(mappedBy = "workspace", cascade = [CascadeType.ALL])
+  channels: MutableList<Channel> = mutableListOf()
+  
+  @OneToMany(mappedBy = "workspace", cascade = [CascadeType.ALL])
+  members: MutableList<WorkspaceMember> = mutableListOf()
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Workspace member model
+@Entity
+model WorkspaceMember {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  @ManyToOne
+  workspace: Workspace
+  
+  @ManyToOne
+  user: User
+  
+  @Enumerated(EnumType.STRING)
+  role: WorkspaceRole
+  
+  joinedAt: LocalDateTime = LocalDateTime.now()
+}
+
+// Workspace role enum
+enum WorkspaceRole {
+  OWNER, ADMIN, MEMBER, GUEST
+}
+
+// Project model
+@Entity
+model Project {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  name: String
+  description: String
+  
+  @Enumerated(EnumType.STRING)
+  status: ProjectStatus = ProjectStatus.PLANNING
+  
+  dueDate: LocalDate?
+  icon: String?
+  
+  @ManyToOne
+  workspace: Workspace
+  
+  @ManyToOne
+  createdBy: User
+  
+  @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL])
+  tasks: MutableList<Task> = mutableListOf()
+  
+  @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL])
+  boards: MutableList<Board> = mutableListOf()
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Project status enum
+enum ProjectStatus {
+  PLANNING, ACTIVE, ON_HOLD, COMPLETED, CANCELED
+}
+
+// Task model
+@Entity
+model Task {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  title: String
+  description: String
+  
+  @Enumerated(EnumType.STRING)
+  status: TaskStatus = TaskStatus.TODO
+  
+  @Enumerated(EnumType.STRING)
+  priority: TaskPriority = TaskPriority.MEDIUM
+  
+  dueDate: LocalDate?
+  estimatedHours: Float?
+  spentHours: Float?
+  
+  @ManyToOne
+  project: Project
+  
+  @ManyToOne
+  assignee: User?
+  
+  @ManyToOne
+  createdBy: User
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Task status enum
+enum TaskStatus {
+  TODO, IN_PROGRESS, REVIEW, DONE, CANCELED
+}
+
+// Task priority enum
+enum TaskPriority {
+  LOW, MEDIUM, HIGH, CRITICAL
+}
+
+// Board model
+@Entity
+model Board {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  name: String
+  description: String
+  
+  @ManyToOne
+  project: Project
+  
+  @ManyToOne
+  createdBy: User
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Repositories
+// User Repository
+@Repository
+interface UserRepository {
+  extends: "JpaRepository<User, Long>"
+  
+  function findByUsername(username: String): User?
+  function findByEmail(email: String): User?
+  function existsByUsername(username: String): Boolean
+  function existsByEmail(email: String): Boolean
+}
+
+// Workspace Repository
+@Repository
+interface WorkspaceRepository {
+  extends: "JpaRepository<Workspace, Long>"
+  
+  function findByCreatedById(userId: Long): List<Workspace>
+  function findByMembersUserId(userId: Long): List<Workspace>
+}
+
+// Project Repository
+@Repository
+interface ProjectRepository {
+  extends: "JpaRepository<Project, Long>"
+  
+  function findByWorkspaceId(workspaceId: Long): List<Project>
+  function findByCreatedById(userId: Long): List<Project>
+}
+
+// Task Repository
+@Repository
+interface TaskRepository {
+  extends: "JpaRepository<Task, Long>"
+  
+  function findByProjectId(projectId: Long): List<Task>
+  function findByAssigneeId(userId: Long): List<Task>
+  function findByStatus(status: TaskStatus): List<Task>
+  function countByProjectIdAndStatus(projectId: Long, status: TaskStatus): Long
+}
+
+// Services
+// User Service
+@Service
+class UserService {
+  @Autowired
+  private userRepository: UserRepository
+  
+  @Autowired
+  private passwordEncoder: PasswordEncoder
+  
+  @Autowired
+  private jwtTokenProvider: JwtTokenProvider
+  
+  function createUser(username: String, email: String, password: String, displayName: String): User {
+    if (userRepository.existsByUsername(username)) {
+      throw new IllegalArgumentException("Username already exists")
+    }
+    
+    if (userRepository.existsByEmail(email)) {
+      throw new IllegalArgumentException("Email already exists")
+    }
+    
+    val user = new User(
+      username = username,
+      email = email,
+      displayName = displayName,
+      password = passwordEncoder.encode(password)
+    )
+    
+    return userRepository.save(user)
+  }
+  
+  function authenticateUser(username: String, password: String): String {
+    val user = userRepository.findByUsername(username)
+      ?: throw new UsernameNotFoundException("User not found")
+      
+    if (!passwordEncoder.matches(password, user.password)) {
+      throw new BadCredentialsException("Invalid password")
+    }
+    
+    return jwtTokenProvider.generateToken(user)
+  }
+  
+  function getUserById(id: Long): User {
+    return userRepository.findById(id)
+      .orElseThrow { new EntityNotFoundException("User not found") }
+  }
+  
+  function updateUser(id: Long, displayName: String?, avatarUrl: String?): User {
+    val user = getUserById(id)
+    
+    if (displayName != null) {
+      user.displayName = displayName
+    }
+    
+    if (avatarUrl != null) {
+      user.avatarUrl = avatarUrl
+    }
+    
+    return userRepository.save(user)
+  }
+}
+
+// Task Service
+@Service
+class TaskService {
+  @Autowired
+  private taskRepository: TaskRepository
+  
+  @Autowired
+  private projectRepository: ProjectRepository
+  
+  @Autowired
+  private userRepository: UserRepository
+  
+  function createTask(title: String, description: String, projectId: Long, 
+                     priority: TaskPriority, assigneeId: Long?, createdById: Long): Task {
+    val project = projectRepository.findById(projectId)
+      .orElseThrow { new EntityNotFoundException("Project not found") }
+      
+    val createdBy = userRepository.findById(createdById)
+      .orElseThrow { new EntityNotFoundException("User not found") }
+      
+    val assignee = if (assigneeId != null) {
+      userRepository.findById(assigneeId)
+        .orElseThrow { new EntityNotFoundException("Assignee not found") }
+    } else {
+      null
+    }
+    
+    val task = new Task(
+      title = title,
+      description = description,
+      priority = priority,
+      project = project,
+      assignee = assignee,
+      createdBy = createdBy
+    )
+    
+    return taskRepository.save(task)
+  }
+  
+  function updateTaskStatus(taskId: Long, status: TaskStatus): Task {
+    val task = taskRepository.findById(taskId)
+      .orElseThrow { new EntityNotFoundException("Task not found") }
+      
+    task.status = status
+    return taskRepository.save(task)
+  }
+  
+  function getTasksByProject(projectId: Long): List<Task> {
+    return taskRepository.findByProjectId(projectId)
+  }
+  
+  function getTasksByAssignee(userId: Long): List<Task> {
+    return taskRepository.findByAssigneeId(userId)
+  }
+}
+
+// Workspace Service
+@Service
+class WorkspaceService {
+  @Autowired
+  private workspaceRepository: WorkspaceRepository
+  
+  @Autowired
+  private userRepository: UserRepository
+  
+  @Autowired
+  private workspaceMemberRepository: WorkspaceMemberRepository
+  
+  function createWorkspace(name: String, description: String, createdById: Long): Workspace {
+    val creator = userRepository.findById(createdById)
+      .orElseThrow { new EntityNotFoundException("User not found") }
+      
+    val workspace = new Workspace(
+      name = name,
+      description = description,
+      createdBy = creator
+    )
+    
+    val savedWorkspace = workspaceRepository.save(workspace)
+    
+    // Add creator as owner
+    val member = new WorkspaceMember(
+      workspace = savedWorkspace,
+      user = creator,
+      role = WorkspaceRole.OWNER
+    )
+    workspaceMemberRepository.save(member)
+    
+    return savedWorkspace
+  }
+  
+  function getWorkspaceById(id: Long): Workspace {
+    return workspaceRepository.findById(id)
+      .orElseThrow { new EntityNotFoundException("Workspace not found") }
+  }
+  
+  function getUserWorkspaces(userId: Long): List<Workspace> {
+    return workspaceRepository.findByMembersUserId(userId)
+  }
+  
+  function addWorkspaceMember(workspaceId: Long, userId: Long, role: WorkspaceRole): WorkspaceMember {
+    val workspace = getWorkspaceById(workspaceId)
+    val user = userRepository.findById(userId)
+      .orElseThrow { new EntityNotFoundException("User not found") }
+      
+    // Check if already a member
+    workspaceMemberRepository.findByWorkspaceIdAndUserId(workspaceId, userId)?.let {
+      throw new IllegalArgumentException("User is already a member of this workspace")
+    }
+    
+    val member = new WorkspaceMember(
+      workspace = workspace,
+      user = user,
+      role = role
+    )
+    
+    return workspaceMemberRepository.save(member)
+  }
+}
+
+// GaiaScript Controller
+@RestController
+@RequestMapping("/api/gaiascript")
+class GaiaScriptController {
+  @Autowired
+  private kotlinCompilerService: KotlinCompilerService
+  
+  @PostMapping("/compile")
+  function compileGaiaScript(@RequestBody request: CompileRequest): ResponseEntity<CompileResponse> {
+    try {
+      // Generate Kotlin code from GaiaScript
+      val kotlinCode = kotlinCompilerService.generateKotlinFromGaiaScript(
+        request.gaiaScript, 
+        request.appName
+      )
+      
+      // Compile the generated Kotlin code
+      val compilationResult = kotlinCompilerService.compileKotlinCode(
+        kotlinCode, 
+        "com.gaiaspace.generated.${request.appName.lowercase()}"
+      )
+      
+      return ResponseEntity.ok(
+        CompileResponse(
+          success = compilationResult.success,
+          message = compilationResult.message,
+          kotlinCode = kotlinCode,
+          compiledClasses = compilationResult.compiledClasses,
+          outputPath = compilationResult.outputDirectory
+        )
+      )
+    } catch (e: Exception) {
+      return ResponseEntity.ok(
+        CompileResponse(
+          success = false,
+          message = "Error processing GaiaScript: ${e.message}"
+        )
+      )
+    }
+  }
+  
+  @GetMapping("/sample")
+  function getSampleGaiaScript(): ResponseEntity<Map<String, String>> {
+    val sampleGaiaScript = """
+      component App {
+        // UI Components
+        γ.Panel(width: 300, height: 500) {
+          γ.Label(text: "Hello from GaiaScript!")
+          γ.Button(text: "Click me", onClick: handleClick)
+        }
+        
+        // Event handler
+        function handleClick() {
+          console.log("Button clicked")
+        }
+      }
+      
+      // Initialize app
+      App.render()
+    """.trimIndent()
+    
+    return ResponseEntity.ok(mapOf(
+      "gaiaScript" to sampleGaiaScript,
+      "appName" to "SampleApp"
+    ))
+  }
+}
+
+// KotlinCompiler Service
+@Service
+class KotlinCompilerService {
+  private val tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "gaia_kotlin_compiler")
+  
+  function compileKotlinCode(kotlinCode: String, packageName: String = "com.gaiaspace.generated"): CompilationResult {
+    // Create temp directory for compilation
+    val tempDirFile = tempDir.toFile()
+    if (tempDirFile.exists()) {
+      FileSystemUtils.deleteRecursively(tempDirFile)
+    }
+    Files.createDirectories(tempDir)
+    
+    // Create package directories
+    val packagePath = packageName.replace(".", "/")
+    val srcDir = tempDir.resolve("src/main/kotlin/$packagePath")
+    Files.createDirectories(srcDir)
+    
+    // Write Kotlin source file
+    val sourceFile = srcDir.resolve("GeneratedApp.kt").toFile()
+    
+    val fullSource = """
+      package $packageName
+      
+      $kotlinCode
+    """.trimIndent()
+    
+    sourceFile.writeText(fullSource)
+    
+    // Create build.gradle.kts file
+    val buildGradleFile = tempDir.resolve("build.gradle.kts").toFile()
+    buildGradleFile.writeText("""
+      plugins {
+        id("org.jetbrains.kotlin.jvm") version "1.9.22"
+        application
+      }
+      
+      repositories {
+        mavenCentral()
+        google()
+      }
+      
+      dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+        // For Android/UI dependencies (just stubs for compilation)
+        compileOnly("androidx.activity:activity-compose:1.8.1")
+        compileOnly("androidx.compose.material3:material3:1.1.2")
+        compileOnly("androidx.compose.foundation:foundation:1.5.4")
+        compileOnly("androidx.compose.ui:ui:1.5.4")
+        compileOnly("org.tensorflow:tensorflow-lite:2.14.0")
+      }
+      
+      kotlin {
+        jvmToolchain(17)
+      }
+      
+      application {
+        mainClass.set("$packageName.GeneratedAppKt")
+      }
+    """.trimIndent())
+    
+    // Execute gradle to compile
+    try {
+      val process = ProcessBuilder(
+        "./gradlew", "compileKotlin", "--no-daemon", "--console=plain"
+      )
+        .directory(tempDirFile)
+        .redirectErrorStream(true)
+        .start()
+      
+      val output = process.inputStream.bufferedReader().readText()
+      val completed = process.waitFor(60, TimeUnit.SECONDS)
+      
+      if (!completed) {
+        process.destroyForcibly()
+        return CompilationResult(
+          success = false,
+          message = "Compilation timed out after 60 seconds."
+        )
+      }
+      
+      if (process.exitValue() != 0) {
+        return CompilationResult(
+          success = false,
+          message = "Compilation failed:\n$output"
+        )
+      }
+      
+      // Find compiled class files
+      val classesDir = tempDir.resolve("build/classes/kotlin/main")
+      val classFiles = Files.walk(classesDir)
+        .filter { it.toString().endsWith(".class") }
+        .map { classesDir.relativize(it).toString() }
+        .toList()
+      
+      return CompilationResult(
+        success = true,
+        message = "Compilation successful. Generated ${classFiles.size} class files.",
+        compiledClasses = classFiles,
+        outputDirectory = classesDir.toString()
+      )
+      
+    } catch (e: Exception) {
+      return CompilationResult(
+        success = false,
+        message = "Error: ${e.message}"
+      )
+    }
+  }
+  
+  function generateKotlinFromGaiaScript(gaiaScript: String, appName: String): String {
+    // For now, just a simple templating system
+    return """
+      import android.os.Bundle
+      import androidx.activity.ComponentActivity
+      import androidx.activity.compose.setContent
+      import androidx.compose.foundation.layout.*
+      import androidx.compose.material3.*
+      import androidx.compose.runtime.*
+      import androidx.compose.ui.Modifier
+      
+      /**
+       * Generated from GaiaScript:
+       * ```
+       * ${gaiaScript.lines().joinToString("\n * ")}
+       * ```
+       */
+      class ${appName}Activity : ComponentActivity() {
+        override fun onCreate(savedInstanceState: Bundle?) {
+          super.onCreate(savedInstanceState)
+          setContent {
+            MaterialTheme {
+              Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+              ) {
+                ${appName}Content()
+              }
+            }
+          }
+        }
+      }
+      
+      @Composable
+      fun ${appName}Content() {
+        var counter by remember { mutableStateOf(0) }
+        
+        Column(
+          modifier = Modifier.fillMaxSize(),
+          verticalArrangement = Arrangement.Center,
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          Text("Welcome to $appName")
+          Text("Counter: ${counter}")
+          Button(onClick = { counter++ }) {
+            Text("Increment")
+          }
+        }
+      }
+    """.trimIndent()
+  }
+  
+  function cleanup() {
+    try {
+      FileSystemUtils.deleteRecursively(tempDir)
+    } catch (e: Exception) {
+      // Log error
+    }
+  }
+}

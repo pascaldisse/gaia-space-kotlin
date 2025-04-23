@@ -18,6 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
       navLinks.classList.toggle('active');
     });
   }
+  
+  // Check if we're on the gaiascript page
+  if (window.location.pathname === '/gaiascript') {
+    setupGaiaScriptEditor();
+  }
 
   // Add task form submission
   const addTaskForm = document.getElementById('add-task-form');
@@ -159,4 +164,91 @@ function showNotification(message, type = 'info') {
       document.body.removeChild(notification);
     }, 300);
   }, 3000);
+}
+
+function setupGaiaScriptEditor() {
+    const editorContainer = document.getElementById('gaiascript-editor');
+    const outputContainer = document.getElementById('kotlin-output');
+    const compileButton = document.getElementById('compile-button');
+    const statusMessage = document.getElementById('status-message');
+    const appNameInput = document.getElementById('app-name');
+    const loadSampleButton = document.getElementById('load-sample');
+    
+    if (!editorContainer || !outputContainer || !compileButton) {
+        console.error('Missing required elements for GaiaScript editor');
+        return;
+    }
+    
+    // Load sample code
+    loadSampleButton.addEventListener('click', () => {
+        fetch('/api/gaiascript/sample')
+            .then(response => response.json())
+            .then(data => {
+                editorContainer.value = data.gaiaScript;
+                appNameInput.value = data.appName;
+            })
+            .catch(error => {
+                console.error('Error loading sample:', error);
+                statusMessage.textContent = 'Error loading sample';
+                statusMessage.className = 'text-danger';
+            });
+    });
+    
+    // Compile button handler
+    compileButton.addEventListener('click', () => {
+        const gaiaScript = editorContainer.value;
+        const appName = appNameInput.value || 'GaiaApp';
+        
+        if (!gaiaScript) {
+            statusMessage.textContent = 'Please enter some GaiaScript code';
+            statusMessage.className = 'text-warning';
+            return;
+        }
+        
+        statusMessage.textContent = 'Compiling...';
+        statusMessage.className = 'text-info';
+        
+        // Call the API to compile
+        fetch('/api/gaiascript/compile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                gaiaScript: gaiaScript,
+                appName: appName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                outputContainer.textContent = data.kotlinCode;
+                statusMessage.textContent = data.message;
+                statusMessage.className = 'text-success';
+                
+                // Show compilation details
+                if (data.compiledClasses && data.compiledClasses.length > 0) {
+                    const compiledList = document.getElementById('compiled-classes');
+                    compiledList.innerHTML = '';
+                    
+                    data.compiledClasses.forEach(className => {
+                        const li = document.createElement('li');
+                        li.textContent = className;
+                        compiledList.appendChild(li);
+                    });
+                    
+                    document.getElementById('compilation-details').style.display = 'block';
+                }
+            } else {
+                outputContainer.textContent = data.kotlinCode || 'Compilation failed';
+                statusMessage.textContent = data.message;
+                statusMessage.className = 'text-danger';
+            }
+        })
+        .catch(error => {
+            console.error('Error compiling:', error);
+            statusMessage.textContent = 'Error compiling: ' + error.message;
+            statusMessage.className = 'text-danger';
+        });
+    });
 }
