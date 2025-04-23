@@ -16,9 +16,132 @@ application GaiaSpace {
   }
 }
 
+// Configuration
+// Web MVC Configuration
+@Configuration
+class WebMvcConfig : WebMvcConfigurer {
+  @Override
+  function addResourceHandlers(registry: ResourceHandlerRegistry) {
+    registry.addResourceHandler("/static/**")
+      .addResourceLocations("classpath:/static/")
+  }
+  
+  @Override
+  function addViewControllers(registry: ViewControllerRegistry) {
+    registry.addViewController("/").setViewName("redirect:/dashboard")
+  }
+}
+
+// GraphQL Configuration
+@Configuration
+class GraphQLConfig {
+  @Bean
+  function graphQLRuntimeWiring(): RuntimeWiring {
+    return RuntimeWiring.newRuntimeWiring()
+      .type("Query", builder -> {
+        builder.dataFetcher("workspaces", env -> {
+          // Fetch workspaces
+        })
+        builder.dataFetcher("users", env -> {
+          // Fetch users
+        })
+      })
+      .build()
+  }
+}
+
+// Error Configuration
+@ControllerAdvice
+class ErrorConfig {
+  private val logger = LoggerFactory.getLogger(ErrorConfig::class.java)
+  
+  @ExceptionHandler(Exception::class)
+  function handleException(e: Exception): ResponseEntity<Map<String, String>> {
+    logger.error("Unhandled exception", e)
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .body(mapOf("error" to "An unexpected error occurred"))
+  }
+  
+  @ExceptionHandler(EntityNotFoundException::class)
+  function handleEntityNotFound(e: EntityNotFoundException): ResponseEntity<Map<String, String>> {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+      .body(mapOf("error" to e.message ?: "Entity not found"))
+  }
+}
+
+// Data Initializer for development
+@Component
+@Profile("dev")
+class DataInitializer(
+  private val userRepository: UserRepository,
+  private val workspaceRepository: WorkspaceRepository,
+  private val projectRepository: ProjectRepository,
+  private val taskRepository: TaskRepository,
+  private val passwordEncoder: PasswordEncoder
+) : ApplicationRunner {
+  
+  @Override
+  function run(args: ApplicationArguments) {
+    if (userRepository.count() == 0L) {
+      initializeData()
+    }
+  }
+  
+  private function initializeData() {
+    // Create admin user
+    val adminUser = User(
+      username = "admin",
+      email = "admin@example.com",
+      displayName = "Admin User",
+      password = passwordEncoder.encode("password"),
+      roles = setOf(UserRole.ADMIN, UserRole.USER)
+    )
+    userRepository.save(adminUser)
+    
+    // Create sample workspace
+    val workspace = Workspace(
+      name = "Gaia Space",
+      description = "Main workspace for Gaia Space project",
+      createdBy = adminUser
+    )
+    workspaceRepository.save(workspace)
+    
+    // Create sample project
+    val project = Project(
+      name = "Backend Development",
+      description = "Backend development for Gaia Space",
+      workspace = workspace,
+      createdBy = adminUser
+    )
+    projectRepository.save(project)
+    
+    // Create sample tasks
+    val task1 = Task(
+      title = "Set up database",
+      description = "Initialize database schema and migrations",
+      project = project,
+      assignee = adminUser,
+      createdBy = adminUser,
+      status = TaskStatus.DONE
+    )
+    
+    val task2 = Task(
+      title = "Implement user auth",
+      description = "Add JWT authentication and user management",
+      project = project,
+      assignee = adminUser,
+      createdBy = adminUser,
+      status = TaskStatus.IN_PROGRESS
+    )
+    
+    taskRepository.saveAll(listOf(task1, task2))
+  }
+}
+
 // Domain Models
 // User model
 @Entity
+@Table(name = "users")
 model User {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   id: Long
@@ -54,6 +177,7 @@ enum UserRole {
 
 // Workspace model
 @Entity
+@Table(name = "workspaces")
 model Workspace {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   id: Long
@@ -83,6 +207,7 @@ model Workspace {
 
 // Workspace member model
 @Entity
+@Table(name = "workspace_members")
 model WorkspaceMember {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   id: Long
@@ -106,6 +231,7 @@ enum WorkspaceRole {
 
 // Project model
 @Entity
+@Table(name = "projects")
 model Project {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   id: Long
@@ -145,6 +271,7 @@ enum ProjectStatus {
 
 // Task model
 @Entity
+@Table(name = "tasks")
 model Task {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   id: Long
@@ -190,6 +317,7 @@ enum TaskPriority {
 
 // Board model
 @Entity
+@Table(name = "boards")
 model Board {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   id: Long
@@ -208,6 +336,201 @@ model Board {
   
   @UpdateTimestamp
   updatedAt: LocalDateTime
+}
+
+// Channel model
+@Entity
+@Table(name = "channels")
+model Channel {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  name: String
+  description: String
+  
+  @Enumerated(EnumType.STRING)
+  type: ChannelType
+  
+  @ManyToOne
+  workspace: Workspace
+  
+  @ManyToOne
+  createdBy: User
+  
+  @OneToMany(mappedBy = "channel", cascade = [CascadeType.ALL])
+  messages: MutableList<Message> = mutableListOf()
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Channel type enum
+enum ChannelType {
+  TEXT, VOICE, DOCUMENT, TASK, CALENDAR
+}
+
+// Message model
+@Entity
+@Table(name = "messages")
+model Message {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  content: String
+  
+  @ManyToOne
+  channel: Channel
+  
+  @ManyToOne
+  sender: User
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Document model
+@Entity
+@Table(name = "documents")
+model Document {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  title: String
+  content: String
+  
+  @ManyToOne
+  project: Project
+  
+  @ManyToOne
+  parentDocument: Document?
+  
+  @OneToMany(mappedBy = "parentDocument", cascade = [CascadeType.ALL])
+  childDocuments: MutableList<Document> = mutableListOf()
+  
+  @ManyToOne
+  createdBy: User
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Git Repository model
+@Entity
+@Table(name = "git_repositories")
+model GitRepository {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  name: String
+  url: String
+  branch: String = "main"
+  
+  @ManyToOne
+  project: Project
+  
+  @ManyToOne
+  createdBy: User
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Discord Integration model
+@Entity
+@Table(name = "discord_integrations")
+model DiscordIntegration {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  guildId: String
+  accessToken: String
+  refreshToken: String
+  tokenExpiry: LocalDateTime
+  active: Boolean = true
+  
+  @ManyToOne
+  workspace: Workspace
+  
+  @ManyToOne
+  createdBy: User
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Pipeline model
+@Entity
+@Table(name = "pipelines")
+model Pipeline {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  name: String
+  description: String
+  
+  @Column(columnDefinition = "TEXT")
+  config: String
+  
+  @ManyToOne
+  project: Project
+  
+  @ManyToOne
+  createdBy: User
+  
+  @OneToMany(mappedBy = "pipeline", cascade = [CascadeType.ALL])
+  runs: MutableList<PipelineRun> = mutableListOf()
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+  
+  @UpdateTimestamp
+  updatedAt: LocalDateTime
+}
+
+// Pipeline Run model
+@Entity
+@Table(name = "pipeline_runs")
+model PipelineRun {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  id: Long
+  
+  @Enumerated(EnumType.STRING)
+  status: PipelineStatus = PipelineStatus.PENDING
+  
+  startTime: LocalDateTime?
+  endTime: LocalDateTime?
+  
+  @Column(columnDefinition = "TEXT")
+  logs: String = ""
+  
+  @ManyToOne
+  pipeline: Pipeline
+  
+  @ManyToOne
+  triggeredBy: User
+  
+  @CreationTimestamp
+  createdAt: LocalDateTime
+}
+
+// Pipeline Status enum
+enum PipelineStatus {
+  PENDING, RUNNING, SUCCEEDED, FAILED, CANCELED
 }
 
 // Repositories
@@ -231,6 +554,16 @@ interface WorkspaceRepository {
   function findByMembersUserId(userId: Long): List<Workspace>
 }
 
+// Workspace Member Repository
+@Repository
+interface WorkspaceMemberRepository {
+  extends: "JpaRepository<WorkspaceMember, Long>"
+  
+  function findByWorkspaceIdAndUserId(workspaceId: Long, userId: Long): WorkspaceMember?
+  function existsByWorkspaceIdAndUserId(workspaceId: Long, userId: Long): Boolean
+  function findByUserId(userId: Long): List<WorkspaceMember>
+}
+
 // Project Repository
 @Repository
 interface ProjectRepository {
@@ -249,6 +582,219 @@ interface TaskRepository {
   function findByAssigneeId(userId: Long): List<Task>
   function findByStatus(status: TaskStatus): List<Task>
   function countByProjectIdAndStatus(projectId: Long, status: TaskStatus): Long
+}
+
+// Board Repository
+@Repository
+interface BoardRepository {
+  extends: "JpaRepository<Board, Long>"
+  
+  function findByProjectId(projectId: Long): List<Board>
+}
+
+// Channel Repository
+@Repository
+interface ChannelRepository {
+  extends: "JpaRepository<Channel, Long>"
+  
+  function findByWorkspaceId(workspaceId: Long): List<Channel>
+  function findByType(type: ChannelType): List<Channel>
+}
+
+// Message Repository
+@Repository
+interface MessageRepository {
+  extends: "JpaRepository<Message, Long>"
+  
+  function findByChannelId(channelId: Long): List<Message>
+  function findByChannelIdOrderByCreatedAtDesc(channelId: Long, pageable: Pageable): Page<Message>
+}
+
+// Document Repository
+@Repository
+interface DocumentRepository {
+  extends: "JpaRepository<Document, Long>"
+  
+  function findByProjectId(projectId: Long): List<Document>
+  function findByParentDocumentId(parentDocumentId: Long): List<Document>
+}
+
+// Git Repository Repository
+@Repository
+interface GitRepositoryRepository {
+  extends: "JpaRepository<GitRepository, Long>"
+  
+  function findByProjectId(projectId: Long): List<GitRepository>
+}
+
+// Discord Integration Repository
+@Repository
+interface DiscordIntegrationRepository {
+  extends: "JpaRepository<DiscordIntegration, Long>"
+  
+  function findByWorkspaceId(workspaceId: Long): DiscordIntegration?
+  function findByGuildId(guildId: String): DiscordIntegration?
+}
+
+// Pipeline Repository
+@Repository
+interface PipelineRepository {
+  extends: "JpaRepository<Pipeline, Long>"
+  
+  function findByProjectId(projectId: Long): List<Pipeline>
+}
+
+// Pipeline Run Repository
+@Repository
+interface PipelineRunRepository {
+  extends: "JpaRepository<PipelineRun, Long>"
+  
+  function findByPipelineId(pipelineId: Long): List<PipelineRun>
+  function findByPipelineIdOrderByCreatedAtDesc(pipelineId: Long): List<PipelineRun>
+}
+
+// Security Configuration
+@Configuration
+@EnableWebSecurity
+class SecurityConfig {
+  @Autowired
+  private userDetailsService: UserDetailsService
+  
+  @Autowired
+  private jwtAuthenticationFilter: JwtAuthenticationFilter
+  
+  @Bean
+  function securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    http
+      .csrf().disable()
+      .authorizeHttpRequests(authorize -> 
+        authorize
+          .requestMatchers("/api/auth/**", "/h2-console/**", "/", "/index.html", "/static/**").permitAll()
+          .anyRequest().authenticated()
+      )
+      .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+      .and()
+      .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+    
+    return http.build()
+  }
+  
+  @Bean
+  function passwordEncoder(): PasswordEncoder {
+    return BCryptPasswordEncoder()
+  }
+}
+
+// JWT Authentication Filter
+@Component
+class JwtAuthenticationFilter(private val jwtTokenProvider: JwtTokenProvider) : OncePerRequestFilter() {
+  @Override
+  function doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
+    try {
+      val jwt = getJwtFromRequest(request)
+      
+      if (jwt != null && jwtTokenProvider.validateToken(jwt)) {
+        val authentication = jwtTokenProvider.getAuthentication(jwt)
+        SecurityContextHolder.getContext().authentication = authentication
+      }
+    } catch (ex: Exception) {
+      // Log exception, don't set auth
+    }
+    
+    filterChain.doFilter(request, response)
+  }
+  
+  private function getJwtFromRequest(request: HttpServletRequest): String? {
+    val bearerToken = request.getHeader("Authorization")
+    
+    if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+      return bearerToken.substring(7)
+    }
+    
+    return null
+  }
+}
+
+// JWT Token Provider
+@Component
+class JwtTokenProvider {
+  @Value("\${app.jwtSecret}")
+  private secretKey: String
+  
+  @Value("\${app.jwtExpirationInMs}")
+  private expirationInMs: Long
+  
+  private var initialized = false
+  private var keyBytes: ByteArray? = null
+  
+  @PostConstruct
+  function init() {
+    keyBytes = secretKey.toByteArray()
+    initialized = true
+  }
+  
+  function generateToken(user: User): String {
+    val now = Date()
+    val expiryDate = Date(now.time + expirationInMs)
+    
+    val claims = Jwts.claims().setSubject(user.id.toString())
+    claims.put("username", user.username)
+    claims.put("roles", user.roles.map { it.name })
+    
+    return Jwts.builder()
+      .setClaims(claims)
+      .setIssuedAt(now)
+      .setExpiration(expiryDate)
+      .signWith(Keys.hmacShaKeyFor(keyBytes))
+      .compact()
+  }
+  
+  function getUserIdFromToken(token: String): Long? {
+    val claims = Jwts.parserBuilder()
+      .setSigningKey(Keys.hmacShaKeyFor(keyBytes))
+      .build()
+      .parseClaimsJws(token)
+      .body
+    
+    return claims.subject.toLongOrNull()
+  }
+  
+  function validateToken(token: String): Boolean {
+    try {
+      Jwts.parserBuilder()
+        .setSigningKey(Keys.hmacShaKeyFor(keyBytes))
+        .build()
+        .parseClaimsJws(token)
+      return true
+    } catch (ex: Exception) {
+      // Invalid token
+      return false
+    }
+  }
+  
+  function getAuthentication(token: String): Authentication {
+    val claims = Jwts.parserBuilder()
+      .setSigningKey(Keys.hmacShaKeyFor(keyBytes))
+      .build()
+      .parseClaimsJws(token)
+      .body
+    
+    val authorities = (claims["roles"] as List<String>).map { SimpleGrantedAuthority("ROLE_$it") }
+    
+    val principal = User(
+      claims.subject, 
+      claims["username"] as String, 
+      "", 
+      true, 
+      true, 
+      true, 
+      true, 
+      authorities
+    )
+    
+    return UsernamePasswordAuthenticationToken(principal, "", authorities)
+  }
 }
 
 // Services
@@ -312,6 +858,21 @@ class UserService {
     
     return userRepository.save(user)
   }
+  
+  function getAllUsers(): List<User> {
+    return userRepository.findAll()
+  }
+  
+  function changePassword(id: Long, currentPassword: String, newPassword: String): User {
+    val user = getUserById(id)
+    
+    if (!passwordEncoder.matches(currentPassword, user.password)) {
+      throw new BadCredentialsException("Current password is incorrect")
+    }
+    
+    user.password = passwordEncoder.encode(newPassword)
+    return userRepository.save(user)
+  }
 }
 
 // Task Service
@@ -367,6 +928,39 @@ class TaskService {
   
   function getTasksByAssignee(userId: Long): List<Task> {
     return taskRepository.findByAssigneeId(userId)
+  }
+  
+  function updateTask(taskId: Long, title: String?, description: String?, 
+                    priority: TaskPriority?, assigneeId: Long?): Task {
+    val task = taskRepository.findById(taskId)
+      .orElseThrow { new EntityNotFoundException("Task not found") }
+    
+    if (title != null) {
+      task.title = title
+    }
+    
+    if (description != null) {
+      task.description = description
+    }
+    
+    if (priority != null) {
+      task.priority = priority
+    }
+    
+    if (assigneeId != null) {
+      val assignee = userRepository.findById(assigneeId)
+        .orElseThrow { new EntityNotFoundException("Assignee not found") }
+      task.assignee = assignee
+    }
+    
+    return taskRepository.save(task)
+  }
+  
+  function deleteTask(taskId: Long) {
+    if (!taskRepository.existsById(taskId)) {
+      throw new EntityNotFoundException("Task not found")
+    }
+    taskRepository.deleteById(taskId)
   }
 }
 
@@ -431,6 +1025,121 @@ class WorkspaceService {
     )
     
     return workspaceMemberRepository.save(member)
+  }
+}
+
+// Discord Service
+@Service
+class DiscordService {
+  @Autowired
+  private discordIntegrationRepository: DiscordIntegrationRepository
+  
+  @Autowired
+  private workspaceRepository: WorkspaceRepository
+  
+  @Autowired
+  private userRepository: UserRepository
+  
+  @Value("\${discord.clientId}")
+  private clientId: String
+  
+  @Value("\${discord.clientSecret}")
+  private clientSecret: String
+  
+  @Value("\${discord.redirectUri}")
+  private redirectUri: String
+  
+  function createIntegration(code: String, workspaceId: Long, userId: Long): DiscordIntegration {
+    val workspace = workspaceRepository.findById(workspaceId)
+      .orElseThrow { new EntityNotFoundException("Workspace not found") }
+      
+    val user = userRepository.findById(userId)
+      .orElseThrow { new EntityNotFoundException("User not found") }
+    
+    // Process OAuth token exchange
+    // Store discord integration details
+    
+    val integration = new DiscordIntegration(
+      guildId = "123456789012345678",
+      accessToken = "access_token",
+      refreshToken = "refresh_token",
+      tokenExpiry = LocalDateTime.now().plusDays(7),
+      workspace = workspace,
+      createdBy = user
+    )
+    
+    return discordIntegrationRepository.save(integration)
+  }
+  
+  function sendMessageToDiscord(workspaceId: Long, channelId: String, message: String): Boolean {
+    val integration = discordIntegrationRepository.findByWorkspaceId(workspaceId)
+      ?: throw new EntityNotFoundException("Discord integration not found")
+      
+    // Send message to Discord API
+    
+    return true
+  }
+  
+  function deactivateIntegration(workspaceId: Long): DiscordIntegration {
+    val integration = discordIntegrationRepository.findByWorkspaceId(workspaceId)
+      ?: throw new EntityNotFoundException("Discord integration not found")
+      
+    integration.active = false
+    return discordIntegrationRepository.save(integration)
+  }
+}
+
+// Pipeline Service
+@Service
+class PipelineService {
+  @Autowired
+  private pipelineRepository: PipelineRepository
+  
+  @Autowired
+  private pipelineRunRepository: PipelineRunRepository
+  
+  @Autowired
+  private projectRepository: ProjectRepository
+  
+  @Autowired
+  private userRepository: UserRepository
+  
+  function createPipeline(name: String, description: String, config: String, 
+                        projectId: Long, createdById: Long): Pipeline {
+    val project = projectRepository.findById(projectId)
+      .orElseThrow { new EntityNotFoundException("Project not found") }
+      
+    val createdBy = userRepository.findById(createdById)
+      .orElseThrow { new EntityNotFoundException("User not found") }
+      
+    val pipeline = new Pipeline(
+      name = name,
+      description = description,
+      config = config,
+      project = project,
+      createdBy = createdBy
+    )
+    
+    return pipelineRepository.save(pipeline)
+  }
+  
+  function runPipeline(pipelineId: Long, triggeredById: Long): PipelineRun {
+    val pipeline = pipelineRepository.findById(pipelineId)
+      .orElseThrow { new EntityNotFoundException("Pipeline not found") }
+      
+    val user = userRepository.findById(triggeredById)
+      .orElseThrow { new EntityNotFoundException("User not found") }
+      
+    val run = new PipelineRun(
+      pipeline = pipeline,
+      triggeredBy = user,
+      status = PipelineStatus.RUNNING,
+      startTime = LocalDateTime.now()
+    )
+    
+    // Execute pipeline in background
+    
+    return pipelineRunRepository.save(run)
   }
 }
 
@@ -500,14 +1209,24 @@ class GaiaScriptController {
       "appName" to "SampleApp"
     ))
   }
+  
+  @GetMapping("/cleanup")
+  function cleanupCompilationFiles(): ResponseEntity<Map<String, String>> {
+    kotlinCompilerService.cleanup()
+    return ResponseEntity.ok(mapOf("message" to "Cleaned up compilation files"))
+  }
 }
 
 // KotlinCompiler Service
 @Service
 class KotlinCompilerService {
+  private val logger = LoggerFactory.getLogger(KotlinCompilerService::class.java)
+  
   private val tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "gaia_kotlin_compiler")
   
   function compileKotlinCode(kotlinCode: String, packageName: String = "com.gaiaspace.generated"): CompilationResult {
+    logger.info("Compiling Kotlin code with package: $packageName")
+    
     // Create temp directory for compilation
     val tempDirFile = tempDir.toFile()
     if (tempDirFile.exists()) {
@@ -564,6 +1283,12 @@ class KotlinCompilerService {
       }
     """.trimIndent())
     
+    // Create settings.gradle.kts
+    val settingsGradleFile = tempDir.resolve("settings.gradle.kts").toFile()
+    settingsGradleFile.writeText("""
+      rootProject.name = "gaia-generated-app"
+    """.trimIndent())
+    
     // Execute gradle to compile
     try {
       val process = ProcessBuilder(
@@ -606,6 +1331,7 @@ class KotlinCompilerService {
       )
       
     } catch (e: Exception) {
+      logger.error("Error compiling Kotlin code", e)
       return CompilationResult(
         success = false,
         message = "Error: ${e.message}"
@@ -623,6 +1349,7 @@ class KotlinCompilerService {
       import androidx.compose.material3.*
       import androidx.compose.runtime.*
       import androidx.compose.ui.Modifier
+      import androidx.compose.ui.Alignment
       
       /**
        * Generated from GaiaScript:
@@ -656,7 +1383,7 @@ class KotlinCompilerService {
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           Text("Welcome to $appName")
-          Text("Counter: ${counter}")
+          Text("Counter: ${"$"}{counter}")
           Button(onClick = { counter++ }) {
             Text("Increment")
           }
@@ -669,7 +1396,7 @@ class KotlinCompilerService {
     try {
       FileSystemUtils.deleteRecursively(tempDir)
     } catch (e: Exception) {
-      // Log error
+      logger.warn("Failed to clean up temp directory: $tempDir", e)
     }
   }
 }
