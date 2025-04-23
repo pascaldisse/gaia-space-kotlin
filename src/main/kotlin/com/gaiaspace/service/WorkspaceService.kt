@@ -18,11 +18,11 @@ class WorkspaceService(
         return workspaceRepository.findById(id).orElse(null)
     }
     
-    fun findByUser(userId: String): List<Workspace> {
+    fun findByUser(userId: String): kotlin.collections.List<Workspace> {
         return workspaceRepository.findByMemberId(userId)
     }
     
-    fun searchWorkspaces(userId: String, searchTerm: String): List<Workspace> {
+    fun searchWorkspaces(userId: String, searchTerm: String): kotlin.collections.List<Workspace> {
         return workspaceRepository.searchByNameForUser(userId, searchTerm)
     }
     

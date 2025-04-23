@@ -4,31 +4,20 @@ import com.gaiaspace.domain.model.*
 import com.gaiaspace.domain.repository.ChannelRepository
 import com.gaiaspace.domain.repository.DiscordIntegrationRepository
 import com.gaiaspace.domain.repository.WorkspaceRepository
-import discord4j.common.util.Snowflake
-import discord4j.core.DiscordClient
-import discord4j.core.GatewayDiscordClient
-import discord4j.core.object.entity.Guild
-import discord4j.core.object.entity.channel.TextChannel
-import discord4j.core.spec.MessageCreateSpec
-import discord4j.rest.RestClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import reactor.core.publisher.Mono
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 @Service
 class DiscordService(
     private val discordIntegrationRepository: DiscordIntegrationRepository,
     private val workspaceRepository: WorkspaceRepository,
-    private val channelRepository: ChannelRepository,
-    private val clientId: String,
-    private val clientSecret: String,
-    private val redirectUri: String
+    private val channelRepository: ChannelRepository
 ) {
-    private fun createDiscordClient(token: String): DiscordClient {
-        return DiscordClient.create(token)
-    }
+    // Commented out while fixing Discord4J integration issues
+    // private val clientId: String,
+    // private val clientSecret: String,
+    // private val redirectUri: String
     
     @Transactional
     fun createIntegration(
@@ -84,77 +73,20 @@ class DiscordService(
         return mapping
     }
     
-    fun getGuildChannels(integrationId: String): List<discord4j.core.object.entity.channel.Channel> {
-        val integration = discordIntegrationRepository.findById(integrationId).orElseThrow {
-            IllegalArgumentException("Discord integration not found")
-        }
-        
-        val client = createDiscordClient(integration.accessToken)
-        val restClient = client.rest()
-        
-        val guildId = Snowflake.of(integration.discordServerId)
-        
-        return restClient.guildService
-            .getGuildChannels(guildId)
-            .collectList()
-            .block() ?: emptyList()
+    // Temporarily returning empty list until Discord4J integration is fixed
+    fun getGuildChannels(integrationId: String): kotlin.collections.List<Any> {
+        return emptyList()
     }
     
     fun sendMessageToDiscord(integrationId: String, mappingId: String, content: String, sender: String): Boolean {
-        val integration = discordIntegrationRepository.findById(integrationId).orElse(null) ?: return false
-        
-        val mapping = integration.channelMappings.find { it.id == mappingId } ?: return false
-        
-        if (mapping.syncDirection == SyncDirection.GAIA_TO_DISCORD || 
-            mapping.syncDirection == SyncDirection.BIDIRECTIONAL) {
-            
-            val client = createDiscordClient(integration.accessToken)
-            val restClient = client.rest()
-            
-            val channelId = Snowflake.of(mapping.discordChannelId)
-            
-            try {
-                val formattedMessage = "**$sender:** $content"
-                
-                restClient.channelService.createMessage(
-                    channelId,
-                    MessageCreateSpec.builder()
-                        .content(formattedMessage)
-                        .build().asRequest()
-                ).block()
-                
-                return true
-            } catch (e: Exception) {
-                // Handle token expiration and other errors
-                return false
-            }
-        }
-        
+        // Discord integration temporarily disabled
         return false
     }
     
     @Transactional
     fun refreshToken(integrationId: String): DiscordIntegration? {
-        val integration = discordIntegrationRepository.findById(integrationId).orElse(null) ?: return null
-        
-        try {
-            val client = createDiscordClient("")
-            val oauthClient = client.oauth2Service
-            
-            val tokenResponse = oauthClient.refreshAccessToken(clientId, clientSecret, integration.refreshToken).block()
-                ?: return null
-            
-            val updatedIntegration = integration.copy(
-                accessToken = tokenResponse.accessToken,
-                refreshToken = tokenResponse.refreshToken ?: integration.refreshToken,
-                tokenExpiresAt = LocalDateTime.now().plusSeconds(tokenResponse.expiresIn.toLong()),
-                updatedAt = LocalDateTime.now()
-            )
-            
-            return discordIntegrationRepository.save(updatedIntegration)
-        } catch (e: Exception) {
-            return null
-        }
+        // Discord integration temporarily disabled
+        return null
     }
     
     @Transactional
@@ -168,5 +100,9 @@ class DiscordService(
         
         discordIntegrationRepository.save(updatedIntegration)
         return true
+    }
+    
+    fun getIntegrationsByWorkspace(workspaceId: String): kotlin.collections.List<DiscordIntegration> {
+        return discordIntegrationRepository.findByWorkspaceIdAndIsActiveTrue(workspaceId)
     }
 }

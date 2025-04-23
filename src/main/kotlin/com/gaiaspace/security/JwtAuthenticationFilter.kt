@@ -24,7 +24,7 @@ class JwtAuthenticationFilter(
         try {
             val jwt = getJwtFromRequest(request)
             
-            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt!!)) {
                 val userId = jwtTokenProvider.getUserIdFromJWT(jwt)
                 val roles = jwtTokenProvider.getRolesFromJWT(jwt)
                 

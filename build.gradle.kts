@@ -56,6 +56,9 @@ dependencies {
     // HTTP Client
     implementation("org.springframework:spring-webflux")
     
+    // Discord Integration
+    implementation("com.discord4j:discord4j-core:3.2.3")
+    
     // Dev Tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     

@@ -20,7 +20,7 @@ class PipelineService(
         return pipelineRepository.findById(id).orElse(null)
     }
     
-    fun findByRepository(repositoryId: String): List<Pipeline> {
+    fun findByRepository(repositoryId: String): kotlin.collections.List<Pipeline> {
         return pipelineRepository.findByRepositoryId(repositoryId)
     }
     
